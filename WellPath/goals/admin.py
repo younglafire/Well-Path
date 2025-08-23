@@ -4,8 +4,6 @@ from .models import Category, User, Goal ,Unit
 # Register your models here.
 admin.site.register(User)
 admin.site.register(Goal)
-admin.site.register(Category)
-admin.site.register(Unit)
 
 @admin.register(Unit)
 class UnitAdmin(admin.ModelAdmin):

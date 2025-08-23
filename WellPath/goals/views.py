@@ -78,5 +78,5 @@ def create_goal(request):
 #Ajax view load units
 def load_units(request):
     category_id = request.GET.get("category_id")
-    units = Unit.objects.filter(categories__id=category_id).order_by("name")
+    units = Unit.objects.filter(categories__id=category_id).order_by("order")
     return JsonResponse(list(units.values("id", "name")), safe=False)

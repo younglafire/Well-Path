@@ -38,6 +38,9 @@ class GoalForm(forms.ModelForm):
     class Meta:
         model = Goal
         fields = ["title", "description", "category", "unit", "target_value", "deadline", "is_public"]
+        labels = {
+            "is_public": "Public",
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
