@@ -9,6 +9,9 @@ from .forms import CustomUserCreationForm
 def index(request):
     return render(request, "goals/index.html")
 
+def feed(request):
+    return render(request, "goals/feed.html")
+
 def login_view(request):
     #Basically paste from django doc
     if request.method == "POST":
@@ -23,7 +26,7 @@ def login_view(request):
         if user is not None:
             login(request, user)
             #to the main route
-            return redirect("dashboard")
+            return redirect("index")
         else:
             messages.error(request, "Invalid username or password.")
             return redirect("login")
