@@ -8,4 +8,6 @@ urlpatterns = [
     path("feed/", views.feed, name="feed"),
     path('', views.index, name='index'),
     path('goals/', views.goals_view, name='goals'),
+    path("create/", views.create_goal, name="create_goal"),
+    path("ajax/load-units/", views.load_units, name="ajax_load_units")
 ]

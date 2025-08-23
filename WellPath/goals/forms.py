@@ -1,5 +1,6 @@
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
+from .models import Category, Unit, Goal
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(
@@ -32,3 +33,24 @@ class CustomUserCreationForm(UserCreationForm):
 
     class Meta(UserCreationForm.Meta):
         fields = ("username", "email", "password1", "password2")
+
+class GoalForm(forms.ModelForm):
+    class Meta:
+        model = Goal
+        fields = ["title", "description", "category", "unit", "target_value", "deadline", "is_public"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Ban đầu Unit rỗng
+        self.fields["unit"].queryset = Unit.objects.none()
+
+        if "category" in self.data:
+            try:
+                category_id = int(self.data.get("category"))
+                category = Category.objects.get(pk=category_id)
+                self.fields["unit"].queryset = category.units.all()
+            except (ValueError, Category.DoesNotExist):
+                pass
+        elif self.instance.pk and self.instance.category:
+            self.fields["unit"].queryset = self.instance.category.units.all()

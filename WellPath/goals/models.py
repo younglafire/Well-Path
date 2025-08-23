@@ -9,6 +9,7 @@ class User(AbstractUser):
 class Category(models.Model):
     order = models.PositiveIntegerField(default=0)  
     cat = models.CharField(max_length=64)
+    units = models.ManyToManyField("Unit", blank=True, related_name="categories")
 
     def __str__(self):
         return self.cat
@@ -18,9 +19,14 @@ class Category(models.Model):
 
 
 class Unit(models.Model):
+    order = models.PositiveIntegerField(default=0)  
     name = models.CharField(max_length=20)  # km, kg, ml, days
+
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ['order']
 
 
 class Goal(models.Model):

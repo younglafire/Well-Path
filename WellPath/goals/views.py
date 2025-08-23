@@ -1,11 +1,12 @@
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 
-from WellPath.goals.models import Category
-from .forms import CustomUserCreationForm
+from .models import Category,Unit
+from .forms import CustomUserCreationForm, GoalForm
 # Create your views here.
 
 def index(request):
@@ -61,30 +62,21 @@ def goals_view(request):
 
 def create_goal(request):
     if request.method == "POST":
-        title = request.POST.get("title")
-        description = request.POST.get("description")
-        category = request.POST.get("category")
-        target_value = request.POST.get("target_value")
-        unit = request.POST.get("unit")
-        target_date = request.POST.get("target_date")
+        form = GoalForm(request.POST)
+        if form.is_valid():
+            goal = form.save(commit=False)
+            goal.user = request.user
+            goal.save()
+            messages.success(request, "Goal created successfully!")
+            return redirect("index")  # Modify later
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = GoalForm()
+    return render(request, "goals/create_goal.html", {"form": form})
 
-        # Basic validation
-        if not title or not target_value or not unit:
-            messages.error(request, "Title, Target Value, and Unit are required.")
-            return redirect("create_goal")
-
-        # Save the goal to the database (you'll need to implement this part)
-        # For example:
-        # Goal.objects.create(
-        #     user=request.user,
-        #     title=title,
-        #     description=description,
-        #     category=category,
-        #     target_value=target_value,
-        #     unit=unit,
-        #     deadline=target_date
-        # )
-        messages.success(request, "Goal created successfully!")
-        return redirect("goals")
-    categories = Category.objects.all()
-    return render(request, "goals/create_goal.html", {"categories": categories})
+#Ajax view load units
+def load_units(request):
+    category_id = request.GET.get("category_id")
+    units = Unit.objects.filter(categories__id=category_id).order_by("name")
+    return JsonResponse(list(units.values("id", "name")), safe=False)
