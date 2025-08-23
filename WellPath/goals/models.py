@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.exceptions import ValidationError
+
 
 class User(AbstractUser):
     pass
@@ -16,22 +18,31 @@ class Category(models.Model):
 
 
 class Unit(models.Model):
-    name = models.CharField(max_length=20)  # "km", "kg", "days", "ml"
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="units")
-
+    name = models.CharField(max_length=20)  # km, kg, ml, days
     def __str__(self):
-        return f"{self.name} ({self.category.cat})"
+        return self.name
 
 
 class Goal(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, blank=True, null=True, related_name="goals")
-    unit = models.ForeignKey(Unit, on_delete=models.CASCADE, blank=True, null=True, related_name="goals")
-
-    target_value = models.FloatField()   # ví dụ: 10 (km)
-    current_value = models.FloatField(default=0)  # ví dụ: đã chạy 5 (km)
+    category = models.ForeignKey(
+        Category, 
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="goals"
+    )
+    unit = models.ForeignKey(
+        Unit,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="goals"
+    )
+    target_value = models.FloatField()   
+    current_value = models.FloatField(default=0)  
     deadline = models.DateField(null=True, blank=True)
     is_public = models.BooleanField(default=True)
     status = models.CharField(
