@@ -1,24 +1,37 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-# Create your models here.
-
 class User(AbstractUser):
     pass
 
 class Category(models.Model):
+    order = models.PositiveIntegerField(default=0)  
     cat = models.CharField(max_length=64)
+
     def __str__(self):
         return self.cat
-    
+
+    class Meta:
+        ordering = ['order']
+
+
+class Unit(models.Model):
+    name = models.CharField(max_length=20)  # "km", "kg", "days", "ml"
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="units")
+
+    def __str__(self):
+        return f"{self.name} ({self.category.cat})"
+
+
 class Goal(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE ,blank=True, null=True, related_name="category")
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, blank=True, null=True, related_name="goals")
+    unit = models.ForeignKey(Unit, on_delete=models.CASCADE, blank=True, null=True, related_name="goals")
+
     target_value = models.FloatField()   # ví dụ: 10 (km)
     current_value = models.FloatField(default=0)  # ví dụ: đã chạy 5 (km)
-    unit = models.CharField(max_length=20)  # "km", "kg", "hours", v.v.
     deadline = models.DateField(null=True, blank=True)
     is_public = models.BooleanField(default=True)
     status = models.CharField(
@@ -32,4 +45,3 @@ class Goal(models.Model):
         if self.target_value > 0:
             return min(100, (self.current_value / self.target_value) * 100)
         return 0
-    

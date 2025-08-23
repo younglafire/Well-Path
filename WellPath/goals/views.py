@@ -3,6 +3,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
+
+from WellPath.goals.models import Category
 from .forms import CustomUserCreationForm
 # Create your views here.
 
@@ -54,5 +56,35 @@ def register_view(request):
     return render(request, "goals/register.html", {"form": form})
 
 def goals_view(request):
-    
+
     return render(request, "goals/goals.html")
+
+def create_goal(request):
+    if request.method == "POST":
+        title = request.POST.get("title")
+        description = request.POST.get("description")
+        category = request.POST.get("category")
+        target_value = request.POST.get("target_value")
+        unit = request.POST.get("unit")
+        target_date = request.POST.get("target_date")
+
+        # Basic validation
+        if not title or not target_value or not unit:
+            messages.error(request, "Title, Target Value, and Unit are required.")
+            return redirect("create_goal")
+
+        # Save the goal to the database (you'll need to implement this part)
+        # For example:
+        # Goal.objects.create(
+        #     user=request.user,
+        #     title=title,
+        #     description=description,
+        #     category=category,
+        #     target_value=target_value,
+        #     unit=unit,
+        #     deadline=target_date
+        # )
+        messages.success(request, "Goal created successfully!")
+        return redirect("goals")
+    categories = Category.objects.all()
+    return render(request, "goals/create_goal.html", {"categories": categories})
