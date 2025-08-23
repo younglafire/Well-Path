@@ -52,3 +52,7 @@ def register_view(request):
     else:
         form = CustomUserCreationForm()
     return render(request, "goals/register.html", {"form": form})
+
+def goals_view(request):
+    
+    return render(request, "goals/goals.html")

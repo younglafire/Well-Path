@@ -7,4 +7,5 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
     path("feed/", views.feed, name="feed"),
     path('', views.index, name='index'),
+    path('goals/', views.goals_view, name='goals'),
 ]
