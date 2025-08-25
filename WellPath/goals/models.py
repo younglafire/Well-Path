@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.exceptions import ValidationError
-
+from django.utils.timezone import now
 
 class User(AbstractUser):
     pass
@@ -57,6 +57,12 @@ class Goal(models.Model):
         default="ongoing"
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    def days_remaining(self):
+        """Return number of days left until deadline (or None if no deadline)."""
+        if self.deadline:
+            delta = self.deadline - now().date()
+            return delta.days
+        return None
 
     def progress_percentage(self):
         if self.target_value > 0:

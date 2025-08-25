@@ -1,6 +1,9 @@
+from datetime import datetime
+from datetime import date
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from .models import Category, Unit, Goal
+
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(
@@ -35,11 +38,21 @@ class CustomUserCreationForm(UserCreationForm):
         fields = ("username", "email", "password1", "password2")
 
 class GoalForm(forms.ModelForm):
+
+
     class Meta:
         model = Goal
         fields = ["title", "description", "category", "unit", "target_value", "deadline", "is_public"]
         labels = {
             "is_public": "Public",
+        }
+        widgets = {
+            "deadline": forms.DateInput(
+                attrs={
+                    "type": "date",
+                    "min": date.today().strftime("%Y-%m-%d"),  # chỉ show từ hôm nay trở đi
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):
