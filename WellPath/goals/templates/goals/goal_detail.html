@@ -1,0 +1,78 @@
+{% extends 'goals/base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<!-- Ensure Bootstrap CSS is loaded in base.html -->
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <h2>{{ goal.title }}</h2>
+    <p>{{ goal.description }}</p>
+    <p><strong>Deadline:</strong> {{ goal.deadline }}</p>
+    <p><strong>Target:</strong> {{ goal.target_value }} {{ goal.unit.name }}</p>
+    <p><strong>Days Remaining:</strong> {{ goal.days_remaining }}</p>
+    <p><strong>Progress:</strong> <span id="progress-display">{{ goal.current_value|floatformat:2 }} / {{ goal.target_value }} {{ goal.unit.name }}</span></p>
+
+    {% if not goal.completed %}
+        {% if today_progress %}
+            <button class="btn btn-warning" data-toggle="modal" data-target="#progressModal">
+                Edit Progress
+            </button>
+        {% else %}
+            <button class="btn btn-primary" data-toggle="modal" data-target="#progressModal">
+                Add Progress
+            </button>
+        {% endif %}
+        <!--Delete button-->
+        <button class="btn btn-danger" onclick="if(confirm('Are you sure you want to delete this goal? This action cannot be undone.')) { document.getElementById('delete-form-{{ goal.id }}').submit(); }">
+            Delete Goal
+        </button>
+        <form id="delete-form-{{ goal.id }}" method="post" action="{% url 'delete_goal' goal.id %}" style="display: none;">
+            {% csrf_token %}
+            <input type="hidden" name="goal_id" value="{{ goal.id }}">
+        </form>
+    {% endif %}
+
+</div>
+
+<div id="adding-modal">
+    <!-- Modal -->
+    <div class="modal fade" id="progressModal" tabindex="-1" role="dialog" aria-labelledby="progressModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="progressModalLabel">Add/Edit Progress</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="progress-form" method="post" action="{% url 'add_progress' %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="progress-input">How many {{ goal.unit.name }} did you achieve today?</label>
+                            <input type="number" class="form-control" id="progress-input" name="progress" step="0.01"
+                                required value="{{ today_progress.value|default:'' }}">
+
+                        </div>
+                        <input type="hidden" id="progress-id" name="progress_id">
+                        <input type="hidden" id="goal-id" name="goal_id" value="{{ goal.id }}">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        //if the add progress button is clicked, show the modal
+        document.getElementById("btn-add-progress").addEventListener("click", function () {
+            $('#progressModal').modal('show');
+        });
+    });
+</script>
+{% endblock %}
