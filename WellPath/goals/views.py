@@ -4,8 +4,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
+from django.utils.timezone import now
 
-from .models import Category,Unit
+from .models import Category, Goal, Progress,Unit
 from .forms import CustomUserCreationForm, GoalForm
 # Create your views here.
 
@@ -68,7 +69,7 @@ def create_goal(request):
             goal.user = request.user
             goal.save()
             messages.success(request, "Goal created successfully!")
-            return redirect("index")  # Modify later
+            return redirect("goal_detail", goal_id=goal.id)
         else:
             messages.error(request, "Please correct the errors below.")
     else:
@@ -83,4 +84,49 @@ def load_units(request):
 
 
 def dashboard(request, username):
-    return render(request, "goals/dashboard.html", {"username": username})
+    goals = Goal.objects.filter(user__username=username, completed=False)
+    return render(request, "goals/dashboard.html", {"username": username, "goals": goals})
+
+def completed(request, username):
+    goals = Goal.objects.filter(user__username=username, completed=True)
+    return render(request, "goals/completed.html", {"username": username, "goals": goals})
+
+def goal_detail(request, goal_id):
+    goal = Goal.objects.get(id=goal_id)
+    today_progress = goal.has_today_progress(request.user)
+    return render(request, "goals/goal_detail.html", {
+        "goal": goal,
+        "today_progress": today_progress,
+    })
+
+def add_progress(request):
+    if request.method == "POST":
+        goal_id = request.POST.get("goal_id")
+        value = float(request.POST.get("progress"))
+        goal = Goal.objects.get(id=goal_id)
+
+        today = now().date()
+        progress, created = Progress.objects.get_or_create(
+            user=request.user,
+            goal=goal,
+            date=today,
+            defaults={"value": value}
+        )
+
+        if not created:
+            # Already exists → update instead of add new
+            progress.value = value
+            progress.save()
+
+        messages.success(request, "Progress saved successfully!")
+
+        # Check goal completion
+        if goal.current_value() >= goal.target_value:
+            goal.completed = True
+            goal.finished_at = now()
+            goal.save()
+            messages.success(request, "Congratulations! You've achieved your goal.")
+
+        return redirect("goal_detail", goal_id=goal_id)
+    return redirect("index")
+

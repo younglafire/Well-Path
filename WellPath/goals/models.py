@@ -51,12 +51,11 @@ class Goal(models.Model):
     current_value = models.FloatField(default=0)  
     deadline = models.DateField(null=True, blank=True)
     is_public = models.BooleanField(default=True)
-    status = models.CharField(
-        max_length=20,
-        choices=[("ongoing", "Ongoing"), ("completed", "Completed")],
-        default="ongoing"
-    )
+    completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+
     def days_remaining(self):
         """Return number of days left until deadline (or None if no deadline)."""
         if self.deadline:
@@ -64,7 +63,23 @@ class Goal(models.Model):
             return delta.days
         return None
 
-    def progress_percentage(self):
-        if self.target_value > 0:
-            return min(100, (self.current_value / self.target_value) * 100)
-        return 0
+    def current_value(self):
+        return sum(p.value for p in self.progresses.all())
+
+    def has_today_progress(self, user):
+        return self.progresses.filter(user=user, date=now().date()).first()
+    
+
+class Progress(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    goal = models.ForeignKey(Goal, on_delete=models.CASCADE, related_name="progresses")
+    value = models.FloatField()
+    date = models.DateField(default=now)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'goal', 'date'], name='unique_daily_progress')
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.goal.title} - {self.value} on {self.date}"
