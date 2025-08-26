@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block extra_head %}
-<!-- Ensure Bootstrap CSS is loaded in base.html -->
+<!-- Ensure Bootstrap 5 CSS is loaded in base.html -->
 {% endblock %}
 
 {% block content %}
@@ -13,7 +13,33 @@
     <p><strong>Deadline:</strong> {{ goal.deadline }}</p>
     <p><strong>Target:</strong> {{ goal.target_value }} {{ goal.unit.name }}</p>
     <p><strong>Days Remaining:</strong> {{ goal.days_remaining }}</p>
-    <p><strong>Progress:</strong> <span id="progress-display">{{ goal.current_value|floatformat:2 }} / {{ goal.target_value }} {{ goal.unit.name }}</span></p>
+    <p>
+        <strong>Progress:</strong>
+        <span id="progress-display">{{ total_progress|floatformat:2 }} / {{ goal.target_value }} {{ goal.unit.name }}</span>
+    </p>
+
+    <!-- Progress Bar -->
+    <div class="progress" style="height: 30px;">
+        {% if progress_percent == 0 %}
+            <div class="progress-bar bg-info" role="progressbar"
+                style="width: 1%;"
+                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                0%
+            </div>
+        {% elif progress_percent <= 100 %}
+            <div class="progress-bar bg-success" role="progressbar"
+                style="width: {{ progress_percent|floatformat:2 }}%;"
+                aria-valuenow="{{ progress_percent|floatformat:2 }}" aria-valuemin="0" aria-valuemax="100">
+                {{ progress_percent|floatformat:0 }}%
+            </div>
+        {% else %}
+            <div class="progress-bar bg-green" role="progressbar"
+                style="width: 100%;"
+                aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                100%
+            </div>
+        {% endif %}
+    </div>
 
     {% if not goal.completed %}
         {% if today_progress %}

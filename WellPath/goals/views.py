@@ -75,6 +75,21 @@ def create_goal(request):
     else:
         form = GoalForm()
     return render(request, "goals/create_goal.html", {"form": form})
+def delete_goal(request, goal_id):
+    if request.method == "POST":
+        try:
+            goal = Goal.objects.get(id=goal_id)
+        except Goal.DoesNotExist:
+            messages.error(request, "Goal not found.")
+            return redirect("dashboard", username=request.user.username)
+        # Only allow owner to delete
+        if goal.user != request.user:
+            messages.error(request, "You do not have permission to delete this goal.")
+            return redirect("dashboard", username=request.user.username)
+        goal.delete()
+        messages.success(request, "Goal deleted successfully!")
+        return redirect("dashboard", username=request.user.username)
+    return redirect("dashboard", username=request.user.username)
 
 #Ajax view load units
 def load_units(request):
@@ -91,13 +106,6 @@ def completed(request, username):
     goals = Goal.objects.filter(user__username=username, completed=True)
     return render(request, "goals/completed.html", {"username": username, "goals": goals})
 
-def goal_detail(request, goal_id):
-    goal = Goal.objects.get(id=goal_id)
-    today_progress = goal.has_today_progress(request.user)
-    return render(request, "goals/goal_detail.html", {
-        "goal": goal,
-        "today_progress": today_progress,
-    })
 
 def add_progress(request):
     if request.method == "POST":
@@ -129,4 +137,19 @@ def add_progress(request):
 
         return redirect("goal_detail", goal_id=goal_id)
     return redirect("index")
+
+def goal_detail(request, goal_id):
+    goal = Goal.objects.get(id=goal_id)
+    today_progress = goal.has_today_progress(request.user)
+    total_progress = goal.current_value()
+    if goal.target_value > 0:
+        progress_percent = min(100, (total_progress / goal.target_value) * 100)
+    else:
+        progress_percent = 0
+    return render(request, "goals/goal_detail.html", {
+        "goal": goal,
+        "today_progress": today_progress,
+        "total_progress": total_progress,
+        "progress_percent": progress_percent,
+    })
 

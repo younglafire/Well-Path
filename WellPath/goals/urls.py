@@ -9,6 +9,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('goals/', views.goals_view, name='goals'),
     path("create/", views.create_goal, name="create_goal"),
+    path('delete_goal/<int:goal_id>/', views.delete_goal, name='delete_goal'),
     path("ajax/load-units/", views.load_units, name="ajax_load_units"),
     path('dashboard/<str:username>/', views.dashboard, name='dashboard'),
     path('completed/<str:username>/', views.completed, name='completed'),
