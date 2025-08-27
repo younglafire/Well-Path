@@ -131,7 +131,7 @@ def add_progress(request):
         messages.success(request, "Progress saved successfully!")
 
         # Check goal completion
-        if goal.current_value() >= goal.target_value:
+        if goal.get_current_value() >= goal.target_value:
             goal.completed = True
             goal.finished_at = now()
             goal.save()
@@ -143,7 +143,7 @@ def add_progress(request):
 def goal_detail(request, goal_id):
     goal = Goal.objects.get(id=goal_id)
     today_progress = goal.has_today_progress(request.user)
-    total_progress = goal.current_value()
+    total_progress = goal.get_current_value()
     if goal.target_value > 0:
         progress_percent = min(100, (total_progress / goal.target_value) * 100)
     else:

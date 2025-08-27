@@ -63,7 +63,7 @@ class Goal(models.Model):
             return delta.days
         return None
 
-    def current_value(self):
+    def get_current_value(self):
         return sum(p.value for p in self.progresses.all())
 
     def has_today_progress(self, user):
