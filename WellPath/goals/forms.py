@@ -2,6 +2,7 @@ from datetime import datetime
 from datetime import date
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
+from django.contrib.auth import get_user_model
 from .models import Category, Unit, Goal
 
 
@@ -35,10 +36,11 @@ class CustomUserCreationForm(UserCreationForm):
     )
 
     class Meta(UserCreationForm.Meta):
+        model = get_user_model()
         fields = ("username", "email", "password1", "password2")
 
-class GoalForm(forms.ModelForm):
 
+class GoalForm(forms.ModelForm):
 
     class Meta:
         model = Goal
@@ -57,7 +59,7 @@ class GoalForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         # Ban đầu Unit rỗng
         self.fields["unit"].queryset = Unit.objects.none()
 
@@ -70,3 +72,10 @@ class GoalForm(forms.ModelForm):
                 pass
         elif self.instance.pk and self.instance.category:
             self.fields["unit"].queryset = self.instance.category.units.all()
+
+
+class GoalEditForm(GoalForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["category"].disabled = True
+        self.fields["unit"].disabled = True

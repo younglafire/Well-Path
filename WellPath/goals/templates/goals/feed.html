@@ -1,7 +1,15 @@
 {% extends 'goals/base.html' %}
 {% block content %}
 <div class="container">
-    <h2>Feed</h2>
-    <p>This is the feed page.</p>
+    <h1>Feed</h1>
+    <div class="row">
+        {% for goal in goals %}
+            <div class="col-md-4">
+                    {% include "goals/components/goal_card.html" with goal=goal show_progress=False %}
+            </div>
+        {% empty %}
+            <p>No goals found.</p>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}

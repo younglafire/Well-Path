@@ -17,7 +17,10 @@
         <strong>Progress:</strong>
         <span id="progress-display">{{ total_progress|floatformat:2 }} / {{ goal.target_value }} {{ goal.unit.name }}</span>
     </p>
-
+    <p class="mt-2 mb-0">
+        <strong>Today's Progress:</strong>
+        <span>{{ today_progress.value|default:0|floatformat:2 }} {{ goal.unit.name }}</span>
+    </p>
     <!-- Progress Bar -->
     <div class="progress" style="height: 30px;">
         {% if progress_percent == 0 %}
@@ -41,16 +44,18 @@
         {% endif %}
     </div>
 
-    {% if not goal.completed %}
+    {% if not goal.completed and user.username == goal.user.username %}
         {% if today_progress %}
-            <button class="btn btn-warning" data-toggle="modal" data-target="#progressModal">
+            <button class="btn btn-warning" id="btn-edit-progress" data-toggle="modal" data-target="#progressModal">
                 Edit Progress
             </button>
         {% else %}
-            <button class="btn btn-primary" data-toggle="modal" data-target="#progressModal">
+            <button class="btn btn-primary" id="btn-add-progress" data-toggle="modal" data-target="#progressModal">
                 Add Progress
             </button>
         {% endif %}
+    {% endif %}
+    {% if user.username == goal.user.username %}
         <!--Delete button-->
         <button class="btn btn-danger" onclick="if(confirm('Are you sure you want to delete this goal? This action cannot be undone.')) { document.getElementById('delete-form-{{ goal.id }}').submit(); }">
             Delete Goal
@@ -59,12 +64,16 @@
             {% csrf_token %}
             <input type="hidden" name="goal_id" value="{{ goal.id }}">
         </form>
+        <!--Edit button leads to edit_goal route-->
+        <a class="btn btn-secondary" href="{% url 'edit_goal' goal.id %}">
+            Edit Goal
+        </a>    
     {% endif %}
 
 </div>
 
+<!-- Adding Progress Modal -->
 <div id="adding-modal">
-    <!-- Modal -->
     <div class="modal fade" id="progressModal" tabindex="-1" role="dialog" aria-labelledby="progressModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -93,12 +102,24 @@
         </div>
     </div>
 </div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        //if the add progress button is clicked, show the modal
-        document.getElementById("btn-add-progress").addEventListener("click", function () {
-            $('#progressModal').modal('show');
-        });
+        // Add Progress button logic
+        var addBtn = document.getElementById("btn-add-progress");
+        if (addBtn) {
+            addBtn.addEventListener("click", function () {
+                $('#progressModal').modal('show');
+            });
+        }
+        // Edit Progress button logic
+        var editProgressBtn = document.getElementById("btn-edit-progress");
+        if (editProgressBtn) {
+            editProgressBtn.addEventListener("click", function () {
+                $('#progressModal').modal('show');
+            });
+        }
+        // No edit goal modal logic needed anymore
     });
 </script>
 {% endblock %}

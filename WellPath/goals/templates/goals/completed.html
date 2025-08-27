@@ -5,22 +5,13 @@
     <h1>{{ user.username }}'s Completed Goals</h1>
     <div class="row">
         {% for goal in goals %}
-                <a class="col-md-4" href="{% url 'goal_detail' goal.id %}">
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ goal.title }}</h5>
-                            <p class="card-text">{{ goal.description }}</p>
-                            <p class="card-text">
-                                <small class="text-muted" style="float: left;">Deadline: {{ goal.deadline }}</small>
-                                <small class="text-muted" style="float: right;">Finished At: {{ goal.finished_at }}</small>
-                            </p>
-                            
-                        </div>
-                    </div>
-                </div>
+            <div class="col-md-4">
+                <a href="{% url 'goal_detail' goal.id %}">
+                    {% include "goals/components/goal_card.html" with goal=goal show_progress=False %}
                 </a>
-            {% empty %}
-                <p>No active goals found.</p>
+            </div>
+        {% empty %}
+            <p>No completed goals found.</p>
         {% endfor %}
     </div>
 </div>

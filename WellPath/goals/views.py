@@ -1,20 +1,20 @@
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.contrib.auth.forms import UserCreationForm
 from django.utils.timezone import now
 
 from .models import Category, Goal, Progress,Unit
-from .forms import CustomUserCreationForm, GoalForm
+from .forms import CustomUserCreationForm, GoalForm, GoalEditForm
 # Create your views here.
 
 def index(request):
     return render(request, "goals/index.html")
 
 def feed(request):
-    return render(request, "goals/feed.html")
+    goals = Goal.objects.filter(is_public=True, completed=False).order_by("-created_at")
+    return render(request, "goals/feed.html", {"goals": goals})
 
 def login_view(request):
     #Basically paste from django doc
@@ -45,14 +45,16 @@ def register_view(request):
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
             username = form.cleaned_data.get("username")
-            password = form.cleaned_data.get("password")
-            user = authenticate(username=username, password=password)
+            password = form.cleaned_data.get("password1")
+            user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
                 messages.success(request, "Registration successful.")
-                return redirect("dashboard")
+                return redirect("dashboard", username=user.username)
+            else:
+                messages.error(request, "Authentication failed after registration.")
     else:
         form = CustomUserCreationForm()
     return render(request, "goals/register.html", {"form": form})
@@ -152,4 +154,24 @@ def goal_detail(request, goal_id):
         "total_progress": total_progress,
         "progress_percent": progress_percent,
     })
+
+@login_required
+def edit_goal(request, goal_id):
+    goal = Goal.objects.get(id=goal_id)
+    if goal.user != request.user:
+        messages.error(request, "You do not have permission to edit this goal.")
+        return redirect("goal_detail", goal_id=goal.id)
+    if request.method == "POST":
+        form = GoalEditForm(request.POST, instance=goal)
+        if form.is_valid():
+            # Don't update category/unit even if POSTed
+            goal = form.save(commit=False)
+            goal.category = goal.category  # keep original
+            goal.unit = goal.unit         # keep original
+            goal.save()
+            messages.success(request, "Goal updated successfully!")
+            return redirect("goal_detail", goal_id=goal.id)
+    else:
+        form = GoalEditForm(instance=goal)
+    return render(request, "goals/edit_goal.html", {"form": form, "goal": goal})
 
