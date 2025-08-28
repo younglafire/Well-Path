@@ -1,12 +1,17 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}WellPath{% endblock %}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'goals/css/styles.css' %}">
+    {% block extra_head %}{% endblock %}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{% static 'goals/js/main.js' %}"></script>
 
 </head>
 <body>

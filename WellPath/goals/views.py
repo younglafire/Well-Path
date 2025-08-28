@@ -1,9 +1,11 @@
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.timezone import now
+from datetime import timedelta
+
 
 from .models import Category, Goal, Progress,Unit
 from .forms import CustomUserCreationForm, GoalForm, GoalEditForm
@@ -140,24 +142,101 @@ def add_progress(request):
         return redirect("goal_detail", goal_id=goal_id)
     return redirect("index")
 
+from datetime import timedelta
+
+from datetime import timedelta
+from django.shortcuts import render, get_object_or_404
+from django.utils.timezone import now
+
 def goal_detail(request, goal_id):
-    goal = Goal.objects.get(id=goal_id)
+    goal = get_object_or_404(Goal, id=goal_id)
+
+    progress_history = goal.progresses.order_by("date")
     today_progress = goal.has_today_progress(request.user)
     total_progress = goal.get_current_value()
+
     if goal.target_value > 0:
         progress_percent = min(100, (total_progress / goal.target_value) * 100)
     else:
         progress_percent = 0
+
+    # --- Build full date range from first progress (or creation) to deadline ---
+    if progress_history.exists():
+        start_date = progress_history.first().date
+    else:
+        start_date = goal.created_at.date()
+
+    end_date = goal.deadline or now().date()
+
+    all_dates = []
+    current = start_date
+    while current <= end_date:
+        all_dates.append(current)
+        current += timedelta(days=1)
+
+    # Map progress by date
+    progress_map = {p.date: p.value for p in progress_history}
+
+    # --- Build aligned lists ---
+    cumulative = []
+    values = []
+    running_total = 0.0
+    today = now().date()
+
+    for d in all_dates:
+        if d <= today:
+            v = float(progress_map.get(d, 0))
+            values.append(v)
+            running_total += v
+            cumulative.append(running_total)
+        else:
+            values.append(None)        # no data after today
+            cumulative.append(None)    # line won't be drawn
+
+    # --- Calculate averages ---
+    # Days passed: from start_date to today (or deadline if earlier)
+    start_date = all_dates[0]
+    last_date = min(today, end_date)
+    days_passed = (last_date - start_date).days + 1 if last_date >= start_date else 1
+
+    total_progress = float(total_progress)
+    avg_per_day = total_progress / days_passed if days_passed > 0 else 0
+
+    # Needed per day to finish: (target - total_progress) / remaining days
+    if goal.deadline and today <= goal.deadline:
+        days_remaining = (goal.deadline - today).days + 1
+    else:
+        days_remaining = 0
+
+    needed_per_day = 0
+    if days_remaining > 0:
+        needed_per_day = (goal.target_value - total_progress) / days_remaining
+        needed_per_day = max(needed_per_day, 0)
+    elif goal.target_value > total_progress:
+        needed_per_day = goal.target_value - total_progress
+
     return render(request, "goals/goal_detail.html", {
         "goal": goal,
         "today_progress": today_progress,
         "total_progress": total_progress,
         "progress_percent": progress_percent,
+        "progress_history": progress_history,
+        "chart_data": {
+            "dates": [d.strftime("%Y-%m-%d") for d in all_dates],
+            "values": values,
+            "cumulative": cumulative,
+            "unit": goal.unit.name if goal.unit else "",
+            "target": float(goal.target_value) if goal.target_value is not None else None,
+            "avg_per_day": avg_per_day,
+            "needed_per_day": needed_per_day,
+        },
+        "avg_per_day": avg_per_day,
+        "needed_per_day": needed_per_day,
     })
 
 @login_required
 def edit_goal(request, goal_id):
-    goal = Goal.objects.get(id=goal_id)
+    goal = get_object_or_404(Goal, id=goal_id)
     if goal.user != request.user:
         messages.error(request, "You do not have permission to edit this goal.")
         return redirect("goal_detail", goal_id=goal.id)
@@ -175,3 +254,7 @@ def edit_goal(request, goal_id):
         form = GoalEditForm(instance=goal)
     return render(request, "goals/edit_goal.html", {"form": form, "goal": goal})
 
+def progress_history(request, goal_id):
+    goal = get_object_or_404(Goal, id=goal_id)
+    progress_history = Progress.objects.filter(goal=goal).order_by("-date")
+    return render(request, "goals/history.html", {"goal": goal, "progress_history": progress_history})

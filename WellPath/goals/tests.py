@@ -3,6 +3,10 @@ from django.utils.timezone import now, timedelta
 from django.db import IntegrityError
 from .models import User, Category, Unit, Goal, Progress
 from django.urls import reverse
+from django.contrib.auth import get_user_model
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from selenium import webdriver
+from selenium.webdriver.common.by import By
 
 
 class UserModelTest(TestCase):
@@ -11,12 +15,14 @@ class UserModelTest(TestCase):
         self.assertEqual(user.username, "testuser")
         self.assertTrue(user.check_password("testpass"))
 
+
 class CategoryUnitModelTest(TestCase):
     # Test if the category and unit are created successfully
     def setUp(self):
         self.unit = Unit.objects.create(name="km")
         self.category = Category.objects.create(cat="Running")
         self.category.units.add(self.unit)
+
     def test_category_str(self):
         self.assertEqual(str(self.category), "Running")
 
@@ -25,6 +31,7 @@ class CategoryUnitModelTest(TestCase):
 
     def test_category_unit_relationship(self):
         self.assertIn(self.unit, self.category.units.all())
+
 
 class GoalModelTest(TestCase):
     def setUp(self):
@@ -41,7 +48,7 @@ class GoalModelTest(TestCase):
             current_value=1,
             deadline=now().date() + timedelta(days=10),
         )
-        
+
     def test_goal_str_fields(self):
         self.assertEqual(self.goal.title, "Lose Weight")
         self.assertEqual(self.goal.target_value, 5)
@@ -55,6 +62,7 @@ class GoalModelTest(TestCase):
         self.goal.deadline = None
         self.goal.save()
         self.assertIsNone(self.goal.days_remaining())
+
 
 class ProgressModelTest(TestCase):
     def setUp(self):
@@ -81,6 +89,7 @@ class ProgressModelTest(TestCase):
     def test_has_today_progress(self):
         Progress.objects.create(user=self.user, goal=self.goal, value=3)
         self.assertTrue(self.goal.has_today_progress(self.user))
+
 
 class GoalProgressCalculationTest(TestCase):
     def setUp(self):
@@ -122,3 +131,35 @@ class GoalDeleteTest(TestCase):
         # check goal is gone
         goals = Goal.objects.filter(id=self.goal.id)
         self.assertEqual(goals.count(), 0)
+
+
+# Senlenium test
+class TestEditGoalSelenium(StaticLiveServerTestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(username='testuser', password='testpass')
+        self.category = Category.objects.create(cat='Health')
+        self.unit = Unit.objects.create(name='Steps')
+        self.goal = Goal.objects.create(
+            user=self.user,
+            title='Walk More',
+            description='Walk 10,000 steps daily',
+            target_value=10000,
+            category=self.category,
+            unit=self.unit
+        )
+        self.browser = webdriver.Chrome()
+        self.browser.implicitly_wait(5)
+
+    def tearDown(self):
+        self.browser.quit()
+
+    def test_edit_goal(self):
+        # Log in
+        self.browser.get(f'{self.live_server_url}/login/')
+        self.browser.find_element(By.NAME, 'username').send_keys('testuser')
+        self.browser.find_element(By.NAME, 'password').send_keys('testpass')
+        self.browser.find_element(By.CSS_SELECTOR, 'button[type="submit"]').click()
+
+        # Go to edit page
+        self.browser.get(f'{self.live_server_url}/edit/{self.goal.id}')
+

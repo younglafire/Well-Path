@@ -67,10 +67,33 @@
         <!--Edit button leads to edit_goal route-->
         <a class="btn btn-secondary" href="{% url 'edit_goal' goal.id %}">
             Edit Goal
-        </a>    
+        </a>   
     {% endif %}
-
+        <a href="{% url 'progress_history' goal.id %}" class="btn btn-info">View History</a>
+    <div>
+        <p>
+            <strong>Average so far:</strong> {{ avg_per_day|floatformat:2 }} {{ goal.unit.name }}/day<br>
+            <strong>Needed to finish:</strong> {{ needed_per_day|floatformat:2 }} {{ goal.unit.name }}/day
+        </p>
+    </div>
 </div>
+
+<div style="width: 800px; height: 400px; margin: auto;">
+  <canvas id="progressChart"></canvas>
+</div>
+
+{{ chart_data|json_script:"chart-data" }}
+<script id="chart-data" type="application/json">
+  {
+
+    "dates": {{ chart_data.dates|safe }},
+    "values": {{ chart_data.values|safe }},
+    "cumulative": {{ cumulative|safe }},
+    "unit": "{{ goal.unit }}",
+    "target": float(goal.target_value), // Ensure target is a number
+    
+  }
+</script>
 
 <!-- Adding Progress Modal -->
 <div id="adding-modal">
@@ -119,7 +142,8 @@
                 $('#progressModal').modal('show');
             });
         }
-        // No edit goal modal logic needed anymore
+            
     });
 </script>
+
 {% endblock %}
