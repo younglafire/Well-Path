@@ -2,43 +2,53 @@
     <div class="card-body">
         <h5>{{ goal.user.username }}</h5>
         <a href="{% url 'goal_detail' goal.id %}">
-
-      
         <h5 class="card-title">{{ goal.title }}</h5>
+        </a>
         <p class="card-text">{{ goal.description }}</p>
+
+        {% if show_progress_form %}
+            <!-- Inline progress form for dashboard -->
+            <label for="progress">How many {{ goal.unit.name }} have you completed today?</label>
+            <form method="POST" action="{% url 'add_progress' %}" class="form-inline">
+                {% csrf_token %}
+                <div class="form-group mb-2">
+                    <label for="progress" class="sr-only">Progress</label>
+                    <input type="number" class="form-control" id="progress" name="progress" placeholder="Progress" min="0" max="100" required>
+                    <input type="hidden" name="goal_id" value="{{ goal.id }}">
+                </div>
+                <button type="submit" class="btn btn-primary mb-2">Add Progress</button>
+            </form>
+        {% endif %}
+
+        <p class="mt-2 mb-0">
+            <strong>Progress:</strong>
+            <span>{{ goal.total_progress|floatformat:2 }} / {{ goal.target_value }} {{ goal.unit.name }}</span>
+        </p>
+        <div class="progress" style="height: 20px;">
+            {% if goal.progress_percent == 0 %}
+                <div class="progress-bar bg-info" role="progressbar"
+                    style="width: 1%;"
+                    aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                    0%
+                </div>
+            {% elif goal.progress_percent <= 100 %}
+                <div class="progress-bar bg-success" role="progressbar"
+                    style="width: {{ goal.progress_percent|floatformat:2 }}%;"
+                    aria-valuenow="{{ goal.progress_percent|floatformat:2 }}" aria-valuemin="0" aria-valuemax="100">
+                    {{ goal.progress_percent|floatformat:0 }}%
+                </div>
+            {% else %}
+                <div class="progress-bar bg-danger" role="progressbar"
+                    style="width: 100%;"
+                    aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                    100%
+                </div>
+            {% endif %}
+        </div>
+
         <p class="card-text">
             <small class="text-muted" style="float: left;">Deadline: {{ goal.deadline }}</small>
-            {% if goal.finished_at %}
-                <small class="text-muted" style="float: right;">Finished At: {{ goal.finished_at }}</small>
-            {% endif %}
+            <small class="text-muted" style="float: right;">Days Remaining: {{ goal.days_remaining }}</small>
         </p>
-        {% if show_progress %}
-            <p class="mt-2 mb-0">
-                <strong>Progress:</strong>
-                <span>{{ total_progress|default:goal.current_value|floatformat:2 }} / {{ goal.target_value }} {{ goal.unit.name }}</span>
-            </p>
-            <div class="progress" style="height: 20px;">
-                {% if progress_percent == 0 %}
-                    <div class="progress-bar bg-info" role="progressbar"
-                        style="width: 1%;"
-                        aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                        0%
-                    </div>
-                {% elif progress_percent <= 100 %}
-                    <div class="progress-bar bg-success" role="progressbar"
-                        style="width: {{ progress_percent|floatformat:2 }}%;"
-                        aria-valuenow="{{ progress_percent|floatformat:2 }}" aria-valuemin="0" aria-valuemax="100">
-                        {{ progress_percent|floatformat:0 }}%
-                    </div>
-                {% else %}
-                    <div class="progress-bar bg-danger" role="progressbar"
-                        style="width: 100%;"
-                        aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
-                        100%
-                    </div>
-                {% endif %}
-            </div>
-        {% endif %}
-        </a>
     </div>
 </div>

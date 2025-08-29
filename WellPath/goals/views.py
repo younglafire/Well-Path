@@ -16,7 +16,34 @@ def index(request):
 
 def feed(request):
     goals = Goal.objects.filter(is_public=True, completed=False).order_by("-created_at")
-    return render(request, "goals/feed.html", {"goals": goals})
+    feed_goals = []
+    today = now().date()
+    for goal in goals:
+        total_progress = goal.get_current_value()
+        if goal.target_value > 0:
+            progress_percent = min(100, (total_progress / goal.target_value) * 100)
+        else:
+            progress_percent = 0
+
+        if goal.deadline and today <= goal.deadline:
+            days_remaining = (goal.deadline - today).days + 1
+        else:
+            days_remaining = 0
+
+        feed_goals.append({
+            "id": goal.id,
+            "title": goal.title,
+            "description": goal.description,
+            "unit": goal.unit,
+            "target_value": goal.target_value,
+            "deadline": goal.deadline,
+            "days_remaining": days_remaining,
+            "total_progress": total_progress,
+            "progress_percent": progress_percent,
+            "current_value": getattr(goal, "current_value", 0),
+        })
+
+    return render(request, "goals/feed.html", {"goals": feed_goals})
 
 def login_view(request):
     #Basically paste from django doc
@@ -104,7 +131,38 @@ def load_units(request):
 
 def dashboard(request, username):
     goals = Goal.objects.filter(user__username=username, completed=False)
-    return render(request, "goals/dashboard.html", {"username": username, "goals": goals})
+    dashboard_goals = []
+    today = now().date()
+    for goal in goals:
+        total_progress = goal.get_current_value()
+        if goal.target_value > 0:
+            progress_percent = min(100, (total_progress / goal.target_value) * 100)
+        else:
+            progress_percent = 0
+
+        # Days remaining calculation
+        if goal.deadline and today <= goal.deadline:
+            days_remaining = (goal.deadline - today).days + 1
+        else:
+            days_remaining = 0
+
+        dashboard_goals.append({
+            "id": goal.id,
+            "title": goal.title,
+            "description": goal.description,
+            "unit": goal.unit,
+            "target_value": goal.target_value,
+            "deadline": goal.deadline,
+            "days_remaining": days_remaining,
+            "total_progress": total_progress,
+            "progress_percent": progress_percent,
+            "current_value": getattr(goal, "current_value", 0),  # fallback if needed
+        })
+
+    return render(request, "goals/dashboard.html", {
+        "user": request.user,
+        "goals": dashboard_goals,
+    })
 
 def completed(request, username):
     goals = Goal.objects.filter(user__username=username, completed=True)

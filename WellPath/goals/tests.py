@@ -163,3 +163,43 @@ class TestEditGoalSelenium(StaticLiveServerTestCase):
         # Go to edit page
         self.browser.get(f'{self.live_server_url}/edit/{self.goal.id}')
 
+
+# Testing the logic in models.py:
+class GoalLogicTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="test", password="123")
+        self.goal = Goal.objects.create(user=self.user, title="Run", target_value=10, current_value=8)
+
+    def test_is_completed_false(self):
+        self.assertFalse(self.goal.is_completed())
+
+    def test_is_completed_true(self):
+        self.goal.current_value = 10
+        self.assertTrue(self.goal.is_completed())
+
+    def test_is_overdue_true(self):
+        self.goal.deadline = now().date() - timedelta(days=1)
+        self.assertTrue(self.goal.is_overdue())
+
+    def test_is_overdue_false_if_completed(self):
+        self.goal.deadline = now().date() - timedelta(days=1)
+        self.goal.current_value = 12
+        self.assertFalse(self.goal.is_overdue())
+
+    def test_progress_percentage(self):
+        self.goal.current_value = 5
+        self.assertEqual(self.goal.progress_percentage(), 50)
+
+
+class ProgressLogicTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="test", password="123")
+        self.goal = Goal.objects.create(user=self.user, title="Run", target_value=10)
+
+    def test_is_today_true(self):
+        p = Progress.objects.create(user=self.user, goal=self.goal, value=3, date=now().date())
+        self.assertTrue(p.is_today())
+
+    def test_is_today_false(self):
+        p = Progress.objects.create(user=self.user, goal=self.goal, value=3, date=now().date() - timedelta(days=1))
+        self.assertFalse(p.is_today())

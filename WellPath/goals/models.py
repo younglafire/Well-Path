@@ -69,6 +69,21 @@ class Goal(models.Model):
     def has_today_progress(self, user):
         return self.progresses.filter(user=user, date=now().date()).first()
     
+    # Tests
+    def is_completed(self):
+        return self.current_value >= self.target_value
+    
+    def is_overdue(self):
+        return self.deadline is not None and self.deadline < now().date() and not self.is_completed()
+    
+    def progress_percentage(self):
+        if self.target_value == 0:
+            return 0
+        return min(100, (self.current_value / self.target_value) * 100)
+    
+
+
+    
 
 class Progress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -83,3 +98,7 @@ class Progress(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.goal.title} - {self.value} on {self.date}"
+    
+    # Test
+    def is_today(self):
+        return self.date == now().date()
