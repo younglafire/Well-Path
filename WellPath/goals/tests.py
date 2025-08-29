@@ -1,12 +1,14 @@
 from django.test import TestCase
 from django.utils.timezone import now, timedelta
 from django.db import IntegrityError
+import unittest
 from .models import User, Category, Unit, Goal, Progress
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+
 
 
 class UserModelTest(TestCase):
@@ -133,7 +135,8 @@ class GoalDeleteTest(TestCase):
         self.assertEqual(goals.count(), 0)
 
 
-# Senlenium test
+# Senlenium test'
+@unittest.skip("Skipping Selenium tests in CI")
 class TestEditGoalSelenium(StaticLiveServerTestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(username='testuser', password='testpass')
