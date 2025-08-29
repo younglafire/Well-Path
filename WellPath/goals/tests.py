@@ -5,10 +5,6 @@ import unittest
 from .models import User, Category, Unit, Goal, Progress
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-
 
 
 class UserModelTest(TestCase):
@@ -135,36 +131,7 @@ class GoalDeleteTest(TestCase):
         self.assertEqual(goals.count(), 0)
 
 
-# Senlenium test'
-@unittest.skip("Skipping Selenium tests in CI")
-class TestEditGoalSelenium(StaticLiveServerTestCase):
-    def setUp(self):
-        self.user = get_user_model().objects.create_user(username='testuser', password='testpass')
-        self.category = Category.objects.create(cat='Health')
-        self.unit = Unit.objects.create(name='Steps')
-        self.goal = Goal.objects.create(
-            user=self.user,
-            title='Walk More',
-            description='Walk 10,000 steps daily',
-            target_value=10000,
-            category=self.category,
-            unit=self.unit
-        )
-        self.browser = webdriver.Chrome()
-        self.browser.implicitly_wait(5)
 
-    def tearDown(self):
-        self.browser.quit()
-
-    def test_edit_goal(self):
-        # Log in
-        self.browser.get(f'{self.live_server_url}/login/')
-        self.browser.find_element(By.NAME, 'username').send_keys('testuser')
-        self.browser.find_element(By.NAME, 'password').send_keys('testpass')
-        self.browser.find_element(By.CSS_SELECTOR, 'button[type="submit"]').click()
-
-        # Go to edit page
-        self.browser.get(f'{self.live_server_url}/edit/{self.goal.id}')
 
 
 # Testing the logic in models.py:
