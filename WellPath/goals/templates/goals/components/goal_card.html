@@ -8,6 +8,7 @@
 
         {% if show_progress_form %}
             <!-- Inline progress form for dashboard -->
+            {% if not goal.today_progress %}
             <label for="progress">How many {{ goal.unit.name }} have you completed today?</label>
             <form method="POST" action="{% url 'add_progress' %}" class="form-inline">
                 {% csrf_token %}
@@ -18,6 +19,9 @@
                 </div>
                 <button type="submit" class="btn btn-primary mb-2">Add Progress</button>
             </form>
+            {% else %}
+                <p class="text-success">You've completed {{ goal.today_progress.value|default:0|floatformat:2 }} {{ goal.unit.name }} today!</p>
+            {% endif %}
         {% endif %}
 
         <p class="mt-2 mb-0">

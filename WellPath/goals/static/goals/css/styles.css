@@ -71,3 +71,13 @@
   background-color: #0d6efd;
   color: #fff;
 }
+
+#upload-box {
+  border: 2px dashed #ccc;
+  transition: 0.2s;
+}
+#upload-box:hover {
+  border-color: #007bff;
+  background-color: #f8f9fa;
+}
+

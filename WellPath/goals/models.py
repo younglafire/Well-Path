@@ -102,3 +102,16 @@ class Progress(models.Model):
     # Test
     def is_today(self):
         return self.date == now().date()
+
+class ProgressPhoto(models.Model):
+    progress = models.ForeignKey("Progress", on_delete=models.CASCADE, related_name="photos")
+
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def validate_image(image):
+        max_size = 5 * 1024 * 1024  # 5 MB
+        if image.size > max_size:
+            raise ValidationError("Image file too large (max 5MB).")
+        if not image.content_type.startswith("image/"):
+            raise ValidationError("Invalid file type. Only images allowed.") 
+    image = models.ImageField(upload_to="progress_photos/", validators=[validate_image])

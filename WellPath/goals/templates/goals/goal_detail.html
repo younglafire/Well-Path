@@ -108,18 +108,27 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form id="progress-form" method="post" action="{% url 'add_progress' %}">
+                    <form id="progress-form" method="post" action="{% url 'add_progress' %}" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="form-group">
                             <label for="progress-input">How many {{ goal.unit.name }} did you achieve today?</label>
                             <input type="number" class="form-control" id="progress-input" name="progress" step="0.01"
                                 required value="{{ today_progress.value|default:'' }}">
-
                         </div>
-                        <input type="hidden" id="progress-id" name="progress_id">
-                        <input type="hidden" id="goal-id" name="goal_id" value="{{ goal.id }}">
+                        <div class="form-group">
+                            <div class="form-group">
+                                <label class="form-label">Upload photos (optional):</label>
+                                <div id="upload-box" class="border rounded p-4 text-center" style="cursor:pointer;">
+                                    <p id="upload-text">Drag & drop photos here, or click to select</p>
+                                    <input type="file" id="progress-photos" name="images" accept="image/*" multiple style="display:none;">
+                                    <div id="preview-container" class="d-flex flex-wrap gap-2 mt-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="goal_id" value="{{ goal.id }}">
                         <button type="submit" class="btn btn-primary">Save</button>
                     </form>
+                    
                 </div>
             </div>
         </div>
@@ -144,6 +153,107 @@
         }
             
     });
+
+    //script for upload photo
+    const box = document.getElementById("upload-box");
+    const input = document.getElementById("progress-photos");
+    const previewContainer = document.getElementById("preview-container");
+    const text = document.getElementById("upload-text");
+
+    const MAX_FILES = 5;       // Max 5 images
+    const MAX_SIZE_MB = 5;     // Max 5 MB each
+    let fileList = [];         // Keep track of selected files
+
+    // Click opens file picker
+    box.addEventListener("click", () => input.click());
+
+    // File chosen
+    input.addEventListener("change", () => handleFiles(input.files));
+
+    // Drag & Drop
+    box.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        box.classList.add("bg-light");
+    });
+    box.addEventListener("dragleave", () => {
+        box.classList.remove("bg-light");
+    });
+    box.addEventListener("drop", (e) => {
+        e.preventDefault();
+        box.classList.remove("bg-light");
+        handleFiles(e.dataTransfer.files);
+    });
+
+    function handleFiles(files) {
+        [...files].forEach(file => {
+            if (!file.type.startsWith("image/")) {
+                alert("Only images allowed!");
+                return;
+            }
+            if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+                alert(`File too large: ${file.name} (max ${MAX_SIZE_MB}MB)`);
+                return;
+            }
+            if (fileList.length >= MAX_FILES) {
+                alert(`Maximum ${MAX_FILES} images allowed`);
+                return;
+            }
+            fileList.push(file);
+        });
+        updatePreviews();
+    }
+
+    function updatePreviews() {
+        previewContainer.innerHTML = "";
+        if (fileList.length > 0) {
+            text.style.display = "none";
+        } else {
+            text.style.display = "block";
+        }
+        fileList.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const wrapper = document.createElement("div");
+                wrapper.style.position = "relative";
+                wrapper.style.display = "inline-block";
+                wrapper.style.margin = "5px";
+
+                const img = document.createElement("img");
+                img.src = e.target.result;
+                img.style.maxWidth = "120px";
+                img.style.borderRadius = "8px";
+                img.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
+
+                const removeBtn = document.createElement("button");
+                removeBtn.innerHTML = "×";
+                removeBtn.style.position = "absolute";
+                removeBtn.style.top = "5px";
+                removeBtn.style.right = "5px";
+                removeBtn.style.background = "rgba(0,0,0,0.6)";
+                removeBtn.style.color = "white";
+                removeBtn.style.border = "none";
+                removeBtn.style.borderRadius = "50%";
+                removeBtn.style.width = "24px";
+                removeBtn.style.height = "24px";
+                removeBtn.style.cursor = "pointer";
+                removeBtn.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    fileList.splice(index, 1);
+                    updatePreviews();
+                });
+
+                wrapper.appendChild(img);
+                wrapper.appendChild(removeBtn);
+                previewContainer.appendChild(wrapper);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Sync with hidden input (for Django)
+        let dataTransfer = new DataTransfer();
+        fileList.forEach(file => dataTransfer.items.add(file));
+        input.files = dataTransfer.files;
+    }
 </script>
 
 {% endblock %}

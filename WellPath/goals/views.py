@@ -1,3 +1,4 @@
+
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, get_user_model
@@ -7,7 +8,7 @@ from django.utils.timezone import now
 from datetime import timedelta
 
 
-from .models import Category, Goal, Progress,Unit
+from .models import Category, Goal, Progress, ProgressPhoto,Unit
 from .forms import CustomUserCreationForm, GoalForm, GoalEditForm
 # Create your views here.
 
@@ -133,6 +134,7 @@ def dashboard(request, username):
     goals = Goal.objects.filter(user__username=username, completed=False)
     dashboard_goals = []
     today = now().date()
+    today_progress = {goal.id: goal.has_today_progress(request.user) for goal in goals}
     for goal in goals:
         total_progress = goal.get_current_value()
         if goal.target_value > 0:
@@ -156,7 +158,8 @@ def dashboard(request, username):
             "days_remaining": days_remaining,
             "total_progress": total_progress,
             "progress_percent": progress_percent,
-            "current_value": getattr(goal, "current_value", 0),  # fallback if needed
+            "current_value": getattr(goal, "current_value", 0),  
+            "today_progress": today_progress.get(goal.id),
         })
 
     return render(request, "goals/dashboard.html", {
@@ -184,9 +187,13 @@ def add_progress(request):
         )
 
         if not created:
-            # Already exists → update instead of add new
             progress.value = value
             progress.save()
+
+        # Handle multiple images
+        images = request.FILES.getlist("images")
+        for img in images:
+            ProgressPhoto.objects.create(progress=progress, image=img)
 
         messages.success(request, "Progress saved successfully!")
 
