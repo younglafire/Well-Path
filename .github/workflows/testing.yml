@@ -3,32 +3,12 @@ name: Django Tests
 on:
   push:
     branches:
-      - "**"   # run on all branches
+      - "**"
   pull_request:
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: testdb
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/testdb
-      DJANGO_SECRET_KEY: testsecret
-      DJANGO_SETTINGS_MODULE: yourproject.settings
 
     steps:
       - name: Checkout code
@@ -51,3 +31,6 @@ jobs:
       - name: Run tests
         run: |
           python manage.py test
+    env:
+      DJANGO_SECRET_KEY: testsecret
+      DJANGO_SETTINGS_MODULE: WellPath.settings
