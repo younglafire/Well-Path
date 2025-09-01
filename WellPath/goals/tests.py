@@ -138,28 +138,41 @@ class GoalDeleteTest(TestCase):
 class GoalLogicTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="test", password="123")
-        self.goal = Goal.objects.create(user=self.user, title="Run", target_value=10, current_value=8)
-
+        self.goal = Goal.objects.create(user=self.user, title="Run", target_value=10)
+    
     def test_is_completed_false(self):
+        # No progress yet
+        self.assertFalse(self.goal.is_completed())
+        # Add progress less than target
+        Progress.objects.create(user=self.user, goal=self.goal, value=8)
+        self.goal.refresh_from_db()
         self.assertFalse(self.goal.is_completed())
 
     def test_is_completed_true(self):
-        self.goal.current_value = 10
+        Progress.objects.create(user=self.user, goal=self.goal, value=10)
+        self.goal.refresh_from_db()
+        self.assertTrue(self.goal.is_completed())
+        # Add more progress
+        Progress.objects.create(user=self.user, goal=self.goal, value=5, date=now().date() + timedelta(days=1))
+        self.goal.refresh_from_db()
         self.assertTrue(self.goal.is_completed())
 
     def test_is_overdue_true(self):
         self.goal.deadline = now().date() - timedelta(days=1)
+        self.goal.save()
         self.assertTrue(self.goal.is_overdue())
 
     def test_is_overdue_false_if_completed(self):
         self.goal.deadline = now().date() - timedelta(days=1)
-        self.goal.current_value = 12
+        self.goal.save()
+        Progress.objects.create(user=self.user, goal=self.goal, value=12)
+        self.goal.refresh_from_db()
         self.assertFalse(self.goal.is_overdue())
 
     def test_progress_percentage(self):
-        self.goal.current_value = 5
+        Progress.objects.create(user=self.user, goal=self.goal, value=5)
+        self.goal.refresh_from_db()
         self.assertEqual(self.goal.progress_percentage(), 50)
-
 
 class ProgressLogicTests(TestCase):
     def setUp(self):

@@ -1,4 +1,3 @@
-
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, get_user_model
@@ -6,6 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.timezone import now
 from datetime import timedelta
+from django.template.loader import render_to_string
+
 
 
 from .models import Category, Goal, Progress, ProgressPhoto,Unit
@@ -16,7 +17,8 @@ def index(request):
     return render(request, "goals/index.html")
 
 def feed(request):
-    goals = Goal.objects.filter(is_public=True, completed=False).order_by("-created_at")
+    all_goals = Goal.objects.filter(is_public=True).order_by("-created_at")
+    goals = [g for g in all_goals if not g.is_completed() and not g.is_overdue()]
     feed_goals = []
     today = now().date()
     for goal in goals:
@@ -131,45 +133,13 @@ def load_units(request):
 
 
 def dashboard(request, username):
-    goals = Goal.objects.filter(user__username=username, completed=False)
-    dashboard_goals = []
-    today = now().date()
-    today_progress = {goal.id: goal.has_today_progress(request.user) for goal in goals}
-    for goal in goals:
-        total_progress = goal.get_current_value()
-        if goal.target_value > 0:
-            progress_percent = min(100, (total_progress / goal.target_value) * 100)
-        else:
-            progress_percent = 0
-
-        # Days remaining calculation
-        if goal.deadline and today <= goal.deadline:
-            days_remaining = (goal.deadline - today).days + 1
-        else:
-            days_remaining = 0
-
-        dashboard_goals.append({
-            "id": goal.id,
-            "title": goal.title,
-            "description": goal.description,
-            "unit": goal.unit,
-            "target_value": goal.target_value,
-            "deadline": goal.deadline,
-            "days_remaining": days_remaining,
-            "total_progress": total_progress,
-            "progress_percent": progress_percent,
-            "current_value": getattr(goal, "current_value", 0),  
-            "today_progress": today_progress.get(goal.id),
-        })
 
     return render(request, "goals/dashboard.html", {
         "user": request.user,
-        "goals": dashboard_goals,
+        
     })
 
-def completed(request, username):
-    goals = Goal.objects.filter(user__username=username, completed=True)
-    return render(request, "goals/completed.html", {"username": username, "goals": goals})
+
 
 
 def add_progress(request):
@@ -198,11 +168,10 @@ def add_progress(request):
         messages.success(request, "Progress saved successfully!")
 
         # Check goal completion
-        if goal.get_current_value() >= goal.target_value:
-            goal.completed = True
-            goal.finished_at = now()
-            goal.save()
-            messages.success(request, "Congratulations! You've achieved your goal.")
+    if goal.is_completed() and goal.finished_at is None:
+        goal.finished_at = now()
+        goal.save()
+        messages.success(request, "Congratulations! You've achieved your goal.")
 
         return redirect("goal_detail", goal_id=goal_id)
     return redirect("index")
@@ -323,3 +292,50 @@ def progress_history(request, goal_id):
     goal = get_object_or_404(Goal, id=goal_id)
     progress_history = Progress.objects.filter(goal=goal).order_by("-date")
     return render(request, "goals/history.html", {"goal": goal, "progress_history": progress_history})
+
+def goals_api(request):
+    filter_type = request.GET.get("status", "active")
+    all_goals = Goal.objects.filter(user=request.user)
+
+    if filter_type == "completed":
+        filtered_goals = [g for g in all_goals if g.is_completed()]
+    elif filter_type == "overdue":
+        filtered_goals = [g for g in all_goals if g.is_overdue() and not g.is_completed()]
+    else:  # active
+        filtered_goals = [
+            g for g in all_goals if not g.is_completed() and not g.is_overdue()
+        ]
+
+    dashboard_goals = []
+    today = now().date()
+    for goal in filtered_goals:
+        total_progress = goal.get_current_value()
+        if goal.target_value > 0:
+            progress_percent = min(100, (total_progress / goal.target_value) * 100)
+        else:
+            progress_percent = 0
+        if goal.deadline and today <= goal.deadline:
+            days_remaining = (goal.deadline - today).days + 1
+        else:
+            days_remaining = 0
+        dashboard_goals.append({
+            "id": goal.id,
+            "title": goal.title,
+            "description": goal.description,
+            "unit": goal.unit,
+            "target_value": goal.target_value,
+            "deadline": goal.deadline,
+            "days_remaining": days_remaining,
+            "total_progress": total_progress,
+            "progress_percent": progress_percent,
+            "current_value": getattr(goal, "current_value", 0),
+            "today_progress": goal.has_today_progress(request.user),
+            "user": goal.user,
+        })
+
+    html = render_to_string("goals/_goal_card.html", {
+        "goals": dashboard_goals,
+        "show_progress_form": True
+    }, request=request)
+
+    return JsonResponse({"html": html})
