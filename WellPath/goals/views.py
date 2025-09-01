@@ -139,9 +139,7 @@ def dashboard(request, username):
         
     })
 
-def completed(request, username):
-    goals = Goal.objects.filter(user__username=username, completed=True)
-    return render(request, "goals/completed.html", {"username": username, "goals": goals})
+
 
 
 def add_progress(request):
