@@ -47,14 +47,12 @@ class Goal(models.Model):
         blank=True,
         related_name="goals"
     )
-    target_value = models.FloatField()   
-    current_value = models.FloatField(default=0)  
+    target_value = models.FloatField()
+    current_value = models.FloatField(default=0)
     deadline = models.DateField(null=True, blank=True)
     is_public = models.BooleanField(default=True)
-    completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     finished_at = models.DateTimeField(null=True, blank=True)
-
 
     def days_remaining(self):
         """Return number of days left until deadline (or None if no deadline)."""
@@ -68,19 +66,32 @@ class Goal(models.Model):
 
     def has_today_progress(self, user):
         return self.progresses.filter(user=user, date=now().date()).first()
-    
-    # Tests
+
+    # Derived logic
     def is_completed(self):
-        return self.current_value >= self.target_value
-    
+        return self.get_current_value() >= self.target_value
+
     def is_overdue(self):
         return self.deadline is not None and self.deadline < now().date() and not self.is_completed()
-    
+
+    @property
+    def status(self):
+        """Return a single status label: active / completed / overdue."""
+        if self.is_completed():
+            return "completed"
+        elif self.is_overdue():
+            return "overdue"
+        return "active"
+
     def progress_percentage(self):
+        total = self.get_current_value()
         if self.target_value == 0:
             return 0
-        return min(100, (self.current_value / self.target_value) * 100)
-    
+        return min(100, (total / self.target_value) * 100)
+
+    def __str__(self):
+        return f"Goal: {self.title}, User: {self.user.username}"
+
 
 
     

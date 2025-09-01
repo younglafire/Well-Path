@@ -4,11 +4,16 @@
 <div class="container">
     <h1>{{ user.username }}'s Dashboard</h1>
     <div class="row">
-        {% for goal in goals %}
-            {% include 'goals/components/goal_card.html' with goal=goal show_progress_form=True %}
-        {% empty %}
-            <p>No active goals found.</p>
-        {% endfor %}
+        <div id="dashboard-view">
+            <nav>
+                <button id="active-tab">Active</button>
+                <button id="completed-tab">Completed</button>
+                <button id="overdue-tab">Overdue</button>
+            </nav>
+            <div id="dashboard-content"></div>
+        </div>
     </div>
 </div>
+{% load static %}
+<script src="{% static 'goals/js/dashboard.js' %}"></script>
 {% endblock %}
