@@ -1,0 +1,14 @@
+{% extends 'goals/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Public Goals Feed</h1>
+    <div class="row">
+        {% for goal in goals %}
+            {% include 'goals/components/goal_card.html' with goal=goal show_progress_form=False %}
+        {% empty %}
+            <p>No public goals found.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

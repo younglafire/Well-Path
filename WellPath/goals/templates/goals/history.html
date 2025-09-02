@@ -1,0 +1,36 @@
+{% extends "goals/base.html" %}
+
+{% block content %}
+  <div class="history-container">
+    <h2>History for: {{ goal.title }}</h2>
+    <p><strong>Target:</strong> {{ goal.target_value }} {{ goal.unit }}</p>
+    <p><strong>Deadline:</strong> {{ goal.deadline }}</p>
+
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Progress</th>
+          <th>Cumulative Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% with total=0 %}
+        {% for p in progress_history %}
+          {% with total=total|add:p.value %}
+          <tr>
+            <td>{{ p.date }}</td>
+            <td>{{ p.value }} {{ goal.unit }}</td>
+            <td>{{ total }} {{ goal.unit }}</td>
+          </tr>
+          {% endwith %}
+        {% empty %}
+          <tr><td colspan="3" class="no-progress">No progress logged yet.</td></tr>
+        {% endfor %}
+        {% endwith %}
+      </tbody>
+    </table>
+
+    <a href="{% url 'goal_detail' goal.id %}" class="back-link">← Back to Goal</a>
+  </div>
+{% endblock %}

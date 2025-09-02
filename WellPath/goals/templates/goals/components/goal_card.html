@@ -1,0 +1,48 @@
+<div class="card mb-4">
+  <div class="card-body">
+    <h5>{{ goal.user.username }}</h5>
+    <a href="{% url 'goal_detail' goal.id %}">
+      <h5 class="card-title">{{ goal.title }}</h5>
+    </a>
+    <p class="card-text">{{ goal.description }}</p>
+
+    {% if show_progress_form %}
+      {% if not goal.today_progress %}
+        <label for="progress">How many {{ goal.unit.name }} have you completed today?</label>
+        <form method="POST" action="{% url 'add_progress' %}" class="form-inline">
+          {% csrf_token %}
+          <div class="form-group mb-2">
+            <input type="number" class="form-control" id="progress" name="progress"
+                   placeholder="Progress" min="0" max="100" required>
+            <input type="hidden" name="goal_id" value="{{ goal.id }}">
+          </div>
+          <button type="submit" class="btn btn-primary mb-2">Add Progress</button>
+        </form>
+      {% else %}
+        <p class="text-success">You've completed {{ goal.today_progress.value|default:0|floatformat:2 }} {{ goal.unit.name }} today!</p>
+      {% endif %}
+    {% endif %}
+
+    <p class="mt-2 mb-0">
+      <strong>Progress:</strong>
+      <span>{{ goal.total_progress|floatformat:2 }} / {{ goal.target_value }} {{ goal.unit.name }}</span>
+    </p>
+
+    <div class="progress" style="height: 20px;">
+      {% if goal.progress_percent == 0 %}
+        <div class="progress-bar bg-info" style="width: 1%;">0%</div>
+      {% elif goal.progress_percent <= 100 %}
+        <div class="progress-bar bg-success" style="width: {{ goal.progress_percent|floatformat:2 }}%;">
+          {{ goal.progress_percent|floatformat:0 }}%
+        </div>
+      {% else %}
+        <div class="progress-bar bg-danger" style="width: 100%;">100%</div>
+      {% endif %}
+    </div>
+
+    <p class="card-text">
+      <small class="text-muted" style="float: left;">Deadline: {{ goal.deadline }}</small>
+      <small class="text-muted" style="float: right;">Days Remaining: {{ goal.days_remaining }}</small>
+    </p>
+  </div>
+</div>
