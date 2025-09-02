@@ -24,16 +24,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r WellPath/requirements.txt
 
+
       - name: Run migrations
         run: |
           python manage.py migrate --noinput
         working-directory: WellPath
+
 
       - name: Run tests
         run: |
           python manage.py test
         working-directory: WellPath
 
-    env:
-      DJANGO_SECRET_KEY: testsecret
-      DJANGO_SETTINGS_MODULE: WellPath.settings
+
