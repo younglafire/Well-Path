@@ -36,7 +36,8 @@
 
         <!-- Progress Bar -->
         <div class="modern-progress">
-          <div class="modern-progress-bar" style="width: {% if goal.progress_percent > 100 %}100{% else %}{{ goal.progress_percent|floatformat:0 }}{% endif %}%;">
+          <div class="modern-progress-bar"
+               style="width: {% if goal.progress_percent > 0 %}{{ goal.progress_percent|floatformat:0 }}{% else %}2{% endif %}%;">
           </div>
         </div>
         
@@ -47,6 +48,7 @@
 
       {% if show_progress_form %}
         <div class="mt-4">
+        {% if not goal.is_completed and not goal.is_overdue %}
           {% if not goal.today_progress %}
           <form method="POST" action="{% url 'add_progress' %}" class="d-flex gap-2">
             {% csrf_token %}
@@ -65,6 +67,21 @@
             </span>
           </div>
           {% endif %}
+          {% elif goal.is_completed %}
+          <div class="d-flex align-items-center justify-content-center p-3 bg-success-50 rounded">
+            <i data-lucide="check-circle" class="me-2" style="color: var(--success-600);"></i>
+            <span class="text-success-600 fw-medium">
+              Congratulations! You've completed this goal.
+            </span>
+          </div>
+          {% elif goal.is_overdue %}
+          <div class="d-flex align-items-center justify-content-center p-3 bg-danger-50 rounded">
+            <i data-lucide="alert-circle" class="me-2" style="color: var(--danger-600);"></i>
+            <span class="text-danger-600 fw-medium">
+              This goal is overdue!
+            </span>
+          </div>
+          {% endif %}
         </div>
       {% endif %}
       </div>
@@ -79,7 +96,7 @@
           <i data-lucide="clock" class="me-1" style="width: 16px; height: 16px;"></i>
           <small>{{ goal.days_remaining }} days left</small>
         </div>
-        {% elif goal.days_remaining == 0 %}
+        {% elif goal.days_remaining == 0 and goal.progress_percent < 100 %}
         <div class="d-flex align-items-center text-warning">
           <i data-lucide="alert-triangle" class="me-1" style="width: 16px; height: 16px;"></i>
           <small class="fw-medium">Due today!</small>

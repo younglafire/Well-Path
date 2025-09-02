@@ -133,10 +133,10 @@ def load_units(request):
 
 
 def dashboard(request, username):
-
+    goals = Goal.objects.filter(user=request.user).order_by("-created_at")
     return render(request, "goals/dashboard.html", {
         "user": request.user,
-        
+        "goals": goals
     })
 
 
@@ -331,6 +331,8 @@ def goals_api(request):
             "current_value": getattr(goal, "current_value", 0),
             "today_progress": goal.has_today_progress(request.user),
             "user": goal.user,
+            "is_completed": goal.is_completed(),
+            "is_overdue": goal.is_overdue(),
         })
 
     html = render_to_string("goals/_goal_card.html", {

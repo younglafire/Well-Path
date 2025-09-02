@@ -42,27 +42,71 @@ class CustomUserCreationForm(UserCreationForm):
 
 class GoalForm(forms.ModelForm):
 
+    title = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            "class": "form-control modern-form-control",
+            "placeholder": "Goal Title",
+        })
+    )
+    description = forms.CharField(
+        required=True,
+        widget=forms.Textarea(attrs={
+            "class": "form-control modern-form-control",
+            "placeholder": "Describe your goal...",
+            "rows": 3,
+        })
+    )
+    category = forms.ModelChoiceField(
+        queryset=Category.objects.all(),
+        required=True,
+        widget=forms.Select(attrs={
+            "class": "form-select modern-form-control",
+        })
+    )
+    unit = forms.ModelChoiceField(
+        queryset=Unit.objects.none(),
+        required=True,
+        widget=forms.Select(attrs={
+            "class": "form-select modern-form-control",
+        })
+    )
+    target_value = forms.FloatField(
+        required=True,
+        widget=forms.NumberInput(attrs={
+            "class": "form-control modern-form-control",
+            "placeholder": "Target value",
+            "min": "0",
+            "step": "0.1",
+        })
+    )
+    deadline = forms.DateField(
+        required=True,
+        widget=forms.DateInput(attrs={
+            "type": "date",
+            "class": "form-control modern-form-control",
+            "min": date.today().strftime("%Y-%m-%d"),
+        })
+    )
+    is_public = forms.BooleanField(
+        required=False,
+        label="Public",
+        widget=forms.CheckboxInput(attrs={
+            "class": "form-check-input modern-checkbox",
+            "style": "accent-color: var(--primary-600); width: 1.5em; height: 1.5em;",
+        })
+    )
+
     class Meta:
         model = Goal
         fields = ["title", "description", "category", "unit", "target_value", "deadline", "is_public"]
         labels = {
             "is_public": "Public",
         }
-        widgets = {
-            "deadline": forms.DateInput(
-                attrs={
-                    "type": "date",
-                    "min": date.today().strftime("%Y-%m-%d"),  # chỉ show từ hôm nay trở đi
-                }
-            ),
-        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # Ban đầu Unit rỗng
         self.fields["unit"].queryset = Unit.objects.none()
-
         if "category" in self.data:
             try:
                 category_id = int(self.data.get("category"))
