@@ -1,52 +1,115 @@
 {% for goal in goals %}
-  <div class="card mb-4">
-    <div class="card-body">
-      <h5>{{ goal.user.username }}</h5>
-      <a href="{% url 'goal_detail' goal.id %}">
-        <h5 class="card-title">{{ goal.title }}</h5>
-      </a>
-      <p class="card-text">{{ goal.description }}</p>
-
-      {% if show_progress_form %}
-        {% if not goal.today_progress %}
-          <label for="progress">How many {{ goal.unit.name }} have you completed today?</label>
-          <form method="POST" action="{% url 'add_progress' %}" class="form-inline">
-            {% csrf_token %}
-            <div class="form-group mb-2">
-              <input type="number" class="form-control" id="progress" name="progress"
-                     placeholder="Progress" min="0" max="100" required>
-              <input type="hidden" name="goal_id" value="{{ goal.id }}">
+  <div class="col-lg-6 col-xl-4 mb-4">
+    <div class="goal-card">
+      <div class="goal-card-header">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div class="d-flex align-items-center">
+            <div class="bg-primary-100 rounded-circle p-2 me-3">
+              <i data-lucide="user" style="width: 20px; height: 20px; color: var(--primary-600);"></i>
             </div>
-            <button type="submit" class="btn btn-primary mb-2">Add Progress</button>
-          </form>
-        {% else %}
-          <p class="text-success">You've completed {{ goal.today_progress.value|default:0|floatformat:2 }} {{ goal.unit.name }} today!</p>
-        {% endif %}
-      {% endif %}
-
-      <p class="mt-2 mb-0">
-        <strong>Progress:</strong>
-        <span>{{ goal.total_progress|floatformat:2 }} / {{ goal.target_value }} {{ goal.unit.name }}</span>
-      </p>
-
-      <div class="progress" style="height: 20px;">
-        {% if goal.progress_percent == 0 %}
-          <div class="progress-bar bg-info" style="width: 1%;">0%</div>
-        {% elif goal.progress_percent <= 100 %}
-          <div class="progress-bar bg-success" style="width: {{ goal.progress_percent|floatformat:2 }}%;">
-            {{ goal.progress_percent|floatformat:0 }}%
+            <span class="fw-medium text-muted">{{ goal.user.username }}</span>
           </div>
-        {% else %}
-          <div class="progress-bar bg-danger" style="width: 100%;">100%</div>
-        {% endif %}
+          <span class="status-badge status-{% if goal.progress_percent >= 100 %}completed{% elif goal.days_remaining <= 0 %}overdue{% else %}active{% endif %}">
+            {% if goal.progress_percent >= 100 %}Completed{% elif goal.days_remaining <= 0 %}Overdue{% else %}Active{% endif %}
+          </span>
+        </div>
+        
+        <a href="{% url 'goal_detail' goal.id %}" class="goal-title">
+          {{ goal.title }}
+        </a>
       </div>
 
-      <p class="card-text">
-        <small class="text-muted" style="float: left;">Deadline: {{ goal.deadline }}</small>
-        <small class="text-muted" style="float: right;">Days Remaining: {{ goal.days_remaining }}</small>
-      </p>
+      <div class="goal-card-body">
+        <p class="goal-description">{{ goal.description|truncatewords:15 }}</p>
+        
+        <!-- Goal Stats -->
+        <div class="goal-stats">
+          <div class="goal-stat">
+            <span class="goal-stat-value">{{ goal.total_progress|floatformat:1 }}</span>
+            <span class="goal-stat-label">Current</span>
+          </div>
+          <div class="goal-stat">
+            <span class="goal-stat-value">{{ goal.target_value|floatformat:0 }}</span>
+            <span class="goal-stat-label">Target</span>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="modern-progress">
+          <div class="modern-progress-bar" style="width: {% if goal.progress_percent > 100 %}100{% else %}{{ goal.progress_percent|floatformat:0 }}{% endif %}%;">
+          </div>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center text-sm">
+          <span class="fw-medium">{{ goal.progress_percent|floatformat:0 }}% Complete</span>
+          <span class="text-muted">{{ goal.total_progress|floatformat:1 }}/{{ goal.target_value }} {{ goal.unit.name }}</span>
+        </div>
+
+      {% if show_progress_form %}
+        <div class="mt-4">
+          {% if not goal.today_progress %}
+          <form method="POST" action="{% url 'add_progress' %}" class="d-flex gap-2">
+            {% csrf_token %}
+            <input type="number" class="modern-form-control flex-grow-1" name="progress"
+                   placeholder="Today's progress" min="0" step="0.1" required>
+            <input type="hidden" name="goal_id" value="{{ goal.id }}">
+            <button type="submit" class="btn btn-success-modern">
+              <i data-lucide="plus" class="me-1"></i>Add
+            </button>
+          </form>
+          {% else %}
+          <div class="d-flex align-items-center justify-content-center p-3 bg-success-50 rounded">
+            <i data-lucide="check-circle" class="me-2" style="color: var(--success-600);"></i>
+            <span class="text-success-600 fw-medium">
+              {{ goal.today_progress.value|default:0|floatformat:1 }} {{ goal.unit.name }} completed today!
+            </span>
+          </div>
+          {% endif %}
+        </div>
+      {% endif %}
+      </div>
+
+      <div class="goal-card-footer">
+        <div class="d-flex align-items-center text-muted">
+          <i data-lucide="calendar" class="me-1" style="width: 16px; height: 16px;"></i>
+          <small>{{ goal.deadline|default:"No deadline" }}</small>
+        </div>
+        {% if goal.days_remaining > 0 %}
+        <div class="d-flex align-items-center text-muted">
+          <i data-lucide="clock" class="me-1" style="width: 16px; height: 16px;"></i>
+          <small>{{ goal.days_remaining }} days left</small>
+        </div>
+        {% elif goal.days_remaining == 0 %}
+        <div class="d-flex align-items-center text-warning">
+          <i data-lucide="alert-triangle" class="me-1" style="width: 16px; height: 16px;"></i>
+          <small class="fw-medium">Due today!</small>
+        </div>
+        {% elif goal.days_remaining < 0 and goal.progress_percent < 100 %}
+        <div class="d-flex align-items-center text-danger">
+          <i data-lucide="alert-circle" class="me-1" style="width: 16px; height: 16px;"></i>
+          <small class="fw-medium">{{ goal.days_remaining|add:"-1" }} days overdue</small>
+        </div>
+        {% endif %}
+      </div>
     </div>
   </div>
 {% empty %}
-  <p>No goals found.</p>
+  <div class="col-12">
+    <div class="modern-card text-center">
+      <div class="modern-card-body py-5">
+        <i data-lucide="target" style="width: 64px; height: 64px; color: var(--neutral-400);" class="mb-4"></i>
+        <h4 class="text-muted">No goals found</h4>
+        <p class="text-muted mb-4">Start your journey by creating your first goal!</p>
+        {% if user.is_authenticated %}
+        <a href="{% url 'create_goal' %}" class="btn btn-primary-modern">
+          <i data-lucide="plus" class="me-2"></i>Create Your First Goal
+        </a>
+        {% else %}
+        <a href="{% url 'register' %}" class="btn btn-primary-modern">
+          <i data-lucide="user-plus" class="me-2"></i>Get Started
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
 {% endfor %}

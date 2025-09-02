@@ -3,18 +3,146 @@
 {% block title %}Create Goal{% endblock %}
 
 {% block content %}
-<div class="shadow-sm p-3 mb-5 bg-body rounded">
-    <h2>Create a New Goal</h2>
-    <form method="post" id="goalForm">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Save</button>
-    </form>
-</div>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i data-lucide="plus-circle" class="me-3"></i>
+                    Create New Goal
+                </h1>
+                <p class="page-subtitle">Define your objective and start tracking your progress</p>
+            </div>
 
+            <div class="modern-card">
+                <div class="modern-card-body">
+                    <form method="post" id="goalForm">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="modern-alert modern-alert-error mb-4">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="modern-form-group">
+                                    <label for="{{ form.title.id_for_label }}" class="modern-form-label">
+                                        <i data-lucide="target" class="me-1" style="width: 16px; height: 16px;"></i>
+                                        Goal Title
+                                    </label>
+                                    {{ form.title }}
+                                    {% if form.title.errors %}
+                                        <div class="text-danger mt-1">{{ form.title.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="modern-form-group">
+                                    <label for="{{ form.target_value.id_for_label }}" class="modern-form-label">
+                                        <i data-lucide="hash" class="me-1" style="width: 16px; height: 16px;"></i>
+                                        Target Value
+                                    </label>
+                                    {{ form.target_value }}
+                                    {% if form.target_value.errors %}
+                                        <div class="text-danger mt-1">{{ form.target_value.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modern-form-group">
+                            <label for="{{ form.description.id_for_label }}" class="modern-form-label">
+                                <i data-lucide="file-text" class="me-1" style="width: 16px; height: 16px;"></i>
+                                Description
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger mt-1">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="modern-form-group">
+                                    <label for="{{ form.category.id_for_label }}" class="modern-form-label">
+                                        <i data-lucide="folder" class="me-1" style="width: 16px; height: 16px;"></i>
+                                        Category
+                                    </label>
+                                    {{ form.category }}
+                                    {% if form.category.errors %}
+                                        <div class="text-danger mt-1">{{ form.category.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="modern-form-group">
+                                    <label for="{{ form.unit.id_for_label }}" class="modern-form-label">
+                                        <i data-lucide="ruler" class="me-1" style="width: 16px; height: 16px;"></i>
+                                        Unit
+                                    </label>
+                                    {{ form.unit }}
+                                    {% if form.unit.errors %}
+                                        <div class="text-danger mt-1">{{ form.unit.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="modern-form-group">
+                                    <label for="{{ form.deadline.id_for_label }}" class="modern-form-label">
+                                        <i data-lucide="calendar" class="me-1" style="width: 16px; height: 16px;"></i>
+                                        Deadline (Optional)
+                                    </label>
+                                    {{ form.deadline }}
+                                    {% if form.deadline.errors %}
+                                        <div class="text-danger mt-1">{{ form.deadline.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="modern-form-group">
+                                    <div class="d-flex align-items-center mt-4">
+                                        {{ form.is_public }}
+                                        <label for="{{ form.is_public.id_for_label }}" class="modern-form-label mb-0 ms-2">
+                                            <i data-lucide="eye" class="me-1" style="width: 16px; height: 16px;"></i>
+                                            Make this goal public
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">Public goals appear in the community feed</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3 mt-4">
+                            <button type="submit" class="btn btn-primary-modern flex-grow-1">
+                                <i data-lucide="save" class="me-2"></i>Create Goal
+                            </button>
+                            <a href="{% url 'dashboard' user.username %}" class="btn btn-secondary-modern">
+                                <i data-lucide="x" class="me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+  // Apply modern form control classes to Django form fields
+  $(document).ready(function() {
+    $('#goalForm input, #goalForm select, #goalForm textarea').addClass('modern-form-control');
+    $('#goalForm label').addClass('modern-form-label');
+  });
+
   $("#id_category").change(function () {
     var url = "{% url 'ajax_load_units' %}";
     var categoryId = $(this).val();
@@ -31,9 +159,9 @@
             $("<option></option>").attr("value", unit.id).text(unit.name)
           );
         });
+        $("#id_unit").addClass('modern-form-control');
       }
     });
   });
 </script>
-
 {% endblock %}

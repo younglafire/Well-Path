@@ -1,7 +1,79 @@
 {% extends 'goals/base.html' %}
+
 {% block content %}
-<div class="container">
-<h2>Welcome to WellPath</h2>
-<p>Your personal goal tracking app.</p>
-</div>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h1 class="hero-title">
+                    <i data-lucide="target" class="me-3"></i>
+                    Welcome to WellPath
+                </h1>
+                <p class="hero-subtitle">
+                    Transform your aspirations into achievements with our intuitive goal tracking platform
+                </p>
+                {% if not user.is_authenticated %}
+                <div class="mt-5">
+                    <a href="{% url 'register' %}" class="btn btn-light btn-lg me-3">
+                        <i data-lucide="user-plus" class="me-2"></i>Get Started
+                    </a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg">
+                        <i data-lucide="log-in" class="me-2"></i>Sign In
+                    </a>
+                </div>
+                {% else %}
+                <div class="mt-5">
+                    <a href="{% url 'dashboard' user.username %}" class="btn btn-light btn-lg me-3">
+                        <i data-lucide="layout-dashboard" class="me-2"></i>Go to Dashboard
+                    </a>
+                    <a href="{% url 'create_goal' %}" class="btn btn-outline-light btn-lg">
+                        <i data-lucide="plus" class="me-2"></i>Create Goal
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="modern-card text-center h-100">
+                    <div class="modern-card-body">
+                        <div class="mb-4">
+                            <i data-lucide="target" style="width: 48px; height: 48px; color: var(--primary-500);"></i>
+                        </div>
+                        <h4>Set Clear Goals</h4>
+                        <p class="text-muted">Define specific, measurable objectives with deadlines and track your progress daily.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="modern-card text-center h-100">
+                    <div class="modern-card-body">
+                        <div class="mb-4">
+                            <i data-lucide="trending-up" style="width: 48px; height: 48px; color: var(--success-500);"></i>
+                        </div>
+                        <h4>Track Progress</h4>
+                        <p class="text-muted">Visualize your journey with beautiful charts and detailed progress analytics.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="modern-card text-center h-100">
+                    <div class="modern-card-body">
+                        <div class="mb-4">
+                            <i data-lucide="users" style="width: 48px; height: 48px; color: var(--warning-500);"></i>
+                        </div>
+                        <h4>Stay Motivated</h4>
+                        <p class="text-muted">Share your goals publicly and get inspired by the community's achievements.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}
