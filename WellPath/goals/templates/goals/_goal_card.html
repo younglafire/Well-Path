@@ -13,15 +13,18 @@
             {% if goal.progress_percent >= 100 %}Completed{% elif goal.days_remaining <= 0 %}Overdue{% else %}Active{% endif %}
           </span>
         </div>
-        
-        <a href="{% url 'goal_detail' goal.id %}" class="goal-title">
-          {{ goal.title }}
-        </a>
+        <div class="goal-title">
+          <a href="{% if user.is_authenticated %}
+                      {% url 'goal_detail' goal.id %}
+                  {% else %}
+                      {% url 'login' %}?next={% url 'goal_detail' goal.id %}
+                  {% endif %}" class="text-decoration-none">
+            {{ goal.title }}
+          </a>
+        </div>
       </div>
-
       <div class="goal-card-body">
         <p class="goal-description">{{ goal.description|truncatewords:15 }}</p>
-        
         <!-- Goal Stats -->
         <div class="goal-stats">
           <div class="goal-stat">
@@ -37,8 +40,7 @@
         <!-- Progress Bar -->
         <div class="modern-progress">
           <div class="modern-progress-bar"
-               style="width: {% if goal.progress_percent > 0 %}{{ goal.progress_percent|floatformat:0 }}{% else %}2{% endif %}%;">
-          </div>
+               style="width: {% if goal.progress_percent > 0 %}{{ goal.progress_percent|floatformat:0 }}{% else %}2{% endif %}%;"></div>
         </div>
         
         <div class="d-flex justify-content-between align-items-center text-sm">
@@ -50,7 +52,7 @@
         <div class="mt-4">
         {% if not goal.is_completed and not goal.is_overdue %}
           {% if not goal.today_progress %}
-          <form method="POST" action="{% url 'add_progress' %}" class="d-flex gap-2">
+          <form method="POST" action="{% url 'add_progress' %}" class="d-flex gap-2 goal-progress-form">
             {% csrf_token %}
             <input type="number" class="modern-form-control flex-grow-1" name="progress"
                    placeholder="Today's progress" min="0" step="0.1" required>
@@ -70,9 +72,6 @@
           {% elif goal.is_completed %}
           <div class="d-flex align-items-center justify-content-center p-3 bg-success-50 rounded">
             <i data-lucide="check-circle" class="me-2" style="color: var(--success-600);"></i>
-            <span class="text-success-600 fw-medium">
-              Congratulations! You've completed this goal.
-            </span>
           </div>
           {% elif goal.is_overdue %}
           <div class="d-flex align-items-center justify-content-center p-3 bg-danger-50 rounded">
@@ -91,17 +90,18 @@
           <i data-lucide="calendar" class="me-1" style="width: 16px; height: 16px;"></i>
           <small>{{ goal.deadline|default:"No deadline" }}</small>
         </div>
-        {% if goal.days_remaining > 0 %}
+        {% if not goal.is_completed and not goal.is_overdue %}
         <div class="d-flex align-items-center text-muted">
           <i data-lucide="clock" class="me-1" style="width: 16px; height: 16px;"></i>
           <small>{{ goal.days_remaining }} days left</small>
         </div>
-        {% elif goal.days_remaining == 0 and goal.progress_percent < 100 %}
-        <div class="d-flex align-items-center text-warning">
-          <i data-lucide="alert-triangle" class="me-1" style="width: 16px; height: 16px;"></i>
-          <small class="fw-medium">Due today!</small>
+        
+        {% elif goal.is_completed and goal.finished_at %}
+        <div class="d-flex align-items-center text-muted">
+          <i data-lucide="clock" class="me-1" style="width: 16px; height: 16px;"></i>
+          <small>Completed on {{ goal.finished_at|date:"F j, Y" }}</small>
         </div>
-        {% elif goal.days_remaining < 0 and goal.progress_percent < 100 %}
+        {% elif goal.is_overdue and goal.progress_percent < 100 %}
         <div class="d-flex align-items-center text-danger">
           <i data-lucide="alert-circle" class="me-1" style="width: 16px; height: 16px;"></i>
           <small class="fw-medium">{{ goal.days_remaining|add:"-1" }} days overdue</small>

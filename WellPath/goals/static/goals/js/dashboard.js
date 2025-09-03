@@ -28,10 +28,14 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(r => r.json())
       .then(data => {
         container.innerHTML = `<div class="row">${data.html}</div>`;
-        // Re-initialize icons after content load
         lucide.createIcons();
-        // Add fade-in animation
         container.classList.add('fade-in');
+        // Prevent card click when interacting with progress form
+        document.querySelectorAll('.goal-progress-form').forEach(form => {
+          form.addEventListener('click', function(event) {
+            event.stopPropagation();
+          });
+        });
       })
       .catch(() => {
         container.innerHTML = `

@@ -126,8 +126,7 @@
                         </div>
                         <span class="text-muted">{{ goal.deadline|default:"No deadline set" }}</span>
                     </div>
-                    
-                    {% if goal.deadline %}
+                    {% if not goal.is_completed %}
                     <div class="mb-3">
                         <div class="d-flex align-items-center mb-2">
                             <i data-lucide="clock" class="me-2 text-muted" style="width: 16px; height: 16px;"></i>
@@ -141,8 +140,15 @@
                             <span class="text-danger fw-medium">{{ goal.days_remaining|add:"-1" }} days overdue</span>
                         {% endif %}
                     </div>
+                    {% else %}
+                        <div class="d-flex align-items-center justify-content-center p-3 bg-success-50 rounded">
+                            <label for="{{ form.title.id_for_label }}" class="modern-form-label">
+                                <i data-lucide="target" class="me-2 text-muted" style="width: 16px; height: 16px;"></i>
+                                <span class="fw-medium">Goal completed on {{ goal.finished_at|date:"F j, Y" }}</span>
+                            </label>
+                        </div>
                     {% endif %}
-
+                    {% if not goal.is_completed %}
                     <div class="mb-3">
                         <div class="d-flex align-items-center mb-2">
                             <i data-lucide="eye" class="me-2 text-muted" style="width: 16px; height: 16px;"></i>
@@ -150,6 +156,7 @@
                         </div>
                         <span class="text-muted">{{ goal.is_public|yesno:"Public,Private" }}</span>
                     </div>
+                    {% endif %}
                 </div>
             </div>
 
