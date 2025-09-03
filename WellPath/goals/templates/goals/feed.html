@@ -2,13 +2,18 @@
 
 {% block content %}
 <div class="container">
-    <h1>Public Goals Feed</h1>
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <i data-lucide="users" class="me-3"></i>
+            Community Goals
+        </h1>
+        <p class="page-subtitle">Get inspired by what others are achieving</p>
+    </div>
+
+    <!-- Goals Grid -->
     <div class="row">
-        {% for goal in goals %}
-            {% include 'goals/components/goal_card.html' with goal=goal show_progress_form=False %}
-        {% empty %}
-            <p>No public goals found.</p>
-        {% endfor %}
+        {% include 'goals/_goal_card.html' with goals=goals show_progress_form=False %}
     </div>
 </div>
 {% endblock %}

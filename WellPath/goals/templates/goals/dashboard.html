@@ -2,18 +2,40 @@
 
 {% block content %}
 <div class="container">
-    <h1>{{ user.username }}'s Dashboard</h1>
-    <div class="row">
-        <div id="dashboard-view">
-            <nav>
-                <button id="active-tab">Active</button>
-                <button id="completed-tab">Completed</button>
-                <button id="overdue-tab">Overdue</button>
-            </nav>
-            <div id="dashboard-content"></div>
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <i data-lucide="layout-dashboard" class="me-3"></i>
+            {{ user.username }}'s Dashboard
+        </h1>
+        <p class="page-subtitle">Track your progress and manage your goals</p>
+    </div>
+
+    <!-- Dashboard Tabs -->
+    <div class="modern-tabs">
+        <button class="modern-tab active" id="active-tab" data-tooltip="View your ongoing goals">
+            <i data-lucide="play-circle" class="me-2"></i>Active Goals
+        </button>
+        <button class="modern-tab" id="completed-tab" data-tooltip="See your achievements">
+            <i data-lucide="check-circle" class="me-2"></i>Completed
+        </button>
+        <button class="modern-tab" id="overdue-tab" data-tooltip="Goals that need attention">
+            <i data-lucide="alert-circle" class="me-2"></i>Overdue
+        </button>
+    </div>
         </div>
     </div>
-</div>
+    <!-- Dashboard Content -->
+    <div id="dashboard-content" class="fade-in">
+        <!-- Content will be loaded here -->
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="text-center mt-5">
+        <a href="{% url 'create_goal' %}" class="btn btn-primary-modern btn-lg">
+            <i data-lucide="plus" class="me-2"></i>Create New Goal
 {% load static %}
+{% endblock %}
+{% block extra_scripts %}
 <script src="{% static 'goals/js/dashboard.js' %}"></script>
 {% endblock %}

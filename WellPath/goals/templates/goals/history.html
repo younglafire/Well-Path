@@ -1,36 +1,110 @@
 {% extends "goals/base.html" %}
 
 {% block content %}
-  <div class="history-container">
-    <h2>History for: {{ goal.title }}</h2>
-    <p><strong>Target:</strong> {{ goal.target_value }} {{ goal.unit }}</p>
-    <p><strong>Deadline:</strong> {{ goal.deadline }}</p>
+<div class="container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <i data-lucide="history" class="me-3"></i>
+            Progress History
+        </h1>
+        <p class="page-subtitle">{{ goal.title }}</p>
+    </div>
 
-    <table class="history-table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Progress</th>
-          <th>Cumulative Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% with total=0 %}
-        {% for p in progress_history %}
-          {% with total=total|add:p.value %}
-          <tr>
-            <td>{{ p.date }}</td>
-            <td>{{ p.value }} {{ goal.unit }}</td>
-            <td>{{ total }} {{ goal.unit }}</td>
-          </tr>
-          {% endwith %}
-        {% empty %}
-          <tr><td colspan="3" class="no-progress">No progress logged yet.</td></tr>
-        {% endfor %}
-        {% endwith %}
-      </tbody>
-    </table>
+    <!-- Goal Summary -->
+    <div class="modern-card mb-4">
+        <div class="modern-card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="goal-stat">
+                        <span class="goal-stat-value">{{ goal.target_value }} {{ goal.unit.name }}</span>
+                        <span class="goal-stat-label">Target</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="goal-stat">
+                        <span class="goal-stat-value">{{ goal.deadline|default:"No deadline" }}</span>
+                        <span class="goal-stat-label">Deadline</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="goal-stat">
+                        <span class="goal-stat-value">{{ progress_history|length }}</span>
+                        <span class="goal-stat-label">Days Logged</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <a href="{% url 'goal_detail' goal.id %}" class="back-link">← Back to Goal</a>
-  </div>
+    <!-- Progress History Table -->
+    <div class="modern-card">
+        <div class="modern-card-header">
+            <h3 class="mb-0">
+                <i data-lucide="list" class="me-2"></i>
+                Daily Progress Log
+            </h3>
+        </div>
+        <div class="modern-card-body p-0">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>
+                            <i data-lucide="calendar" class="me-2" style="width: 16px; height: 16px;"></i>
+                            Date
+                        </th>
+                        <th>
+                            <i data-lucide="activity" class="me-2" style="width: 16px; height: 16px;"></i>
+                            Daily Progress
+                        </th>
+                        <th>
+                            <i data-lucide="trending-up" class="me-2" style="width: 16px; height: 16px;"></i>
+                            Cumulative Total
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% with total=0 %}
+                    {% for p in progress_history %}
+                        {% with total=total|add:p.value %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if p.is_today %}
+                                        <span class="status-badge status-active me-2">Today</span>
+                                    {% endif %}
+                                    {{ p.date|date:"M d, Y" }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="fw-medium">{{ p.value|floatformat:1 }}</span>
+                                <span class="text-muted">{{ goal.unit.name }}</span>
+                            </td>
+                            <td>
+                                <span class="fw-medium">{{ total|floatformat:1 }}</span>
+                                <span class="text-muted">{{ goal.unit.name }}</span>
+                            </td>
+                        </tr>
+                        {% endwith %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-5">
+                                <i data-lucide="calendar-x" style="width: 48px; height: 48px; color: var(--neutral-400);" class="mb-3"></i>
+                                <p class="text-muted mb-0">No progress logged yet</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    {% endwith %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 {% endblock %}
+
+    <!-- Back Button -->
+    <div class="text-center mt-4">
+        <a href="{% url 'goal_detail' goal.id %}" class="btn btn-secondary-modern">
+            <i data-lucide="arrow-left" class="me-2"></i>Back to Goal
+        </a>
+    </div>
+</div>

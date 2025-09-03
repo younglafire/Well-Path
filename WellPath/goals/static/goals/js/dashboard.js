@@ -1,47 +1,56 @@
 document.addEventListener('DOMContentLoaded', function () {
   const tabs = {
-    active: document.querySelector('#active-tab'),
-    completed: document.querySelector('#completed-tab'),
-    overdue: document.querySelector('#overdue-tab'),
+    'active': document.querySelector('#active-tab'),
+    'completed': document.querySelector('#completed-tab'),
+    'overdue': document.querySelector('#overdue-tab'),
   };
   const container = document.querySelector('#dashboard-content');
 
-  // Attach event listeners in a loop
+  // Attach event listeners
   Object.keys(tabs).forEach(status => {
-    tabs[status].addEventListener('click', () => load_dashboard(status));
+    tabs[status].addEventListener('click', () => {
+      // Update active tab
+      Object.values(tabs).forEach(tab => tab.classList.remove('active'));
+      tabs[status].classList.add('active');
+      
+      load_dashboard(status);
+    });
   });
 
   // Default load
   load_dashboard('active');
 
   function load_dashboard(filter = "active") {
-    container.innerHTML = `<h3>Loading ${filter} goals...</h3>`; // temporary loading state
+    // Show loading state
+    window.modernUI.showLoading(container);
 
-            fetch(`/api/goals?status=${filter}`, { credentials: "same-origin" })
-            .then(r => r.json())
-            .then(data => {
-                container.innerHTML = data.html;
-            })
-            .catch(() => {
-              container.innerHTML = "<p>Error loading goals.</p>";
-            });
-            }
-
-  function capitalize(s) {
-    return s.charAt(0).toUpperCase() + s.slice(1);
+    fetch(`/api/goals?status=${filter}`, { credentials: "same-origin" })
+      .then(r => r.json())
+      .then(data => {
+        container.innerHTML = `<div class="row">${data.html}</div>`;
+        lucide.createIcons();
+        container.classList.add('fade-in');
+        // Prevent card click when interacting with progress form
+        document.querySelectorAll('.goal-progress-form').forEach(form => {
+          form.addEventListener('click', function(event) {
+            event.stopPropagation();
+          });
+        });
+      })
+      .catch(() => {
+        container.innerHTML = `
+          <div class="modern-card text-center">
+            <div class="modern-card-body py-5">
+              <i data-lucide="wifi-off" style="width: 48px; height: 48px; color: var(--neutral-400);" class="mb-3"></i>
+              <h4 class="text-muted">Connection Error</h4>
+              <p class="text-muted">Unable to load goals. Please try again.</p>
+              <button class="btn btn-primary-modern" onclick="load_dashboard('${filter}')">
+                <i data-lucide="refresh-cw" class="me-2"></i>Retry
+              </button>
+            </div>
+          </div>
+        `;
+      });
   }
 });
-            fetch(`/api/goals?status=${filter}`, { credentials: "same-origin" })
-            .then(r => r.json())
-            .then(data => {
-                document.querySelector("#dashboard-content").innerHTML = data.html;
-            })
-            .catch(() => {
-              document.querySelector("#dashboard-content").innerHTML = "<p>Error loading goals.</p>";
-            });
-            
-
-  function capitalize(s) {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
 

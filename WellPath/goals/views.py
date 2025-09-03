@@ -44,6 +44,8 @@ def feed(request):
             "total_progress": total_progress,
             "progress_percent": progress_percent,
             "current_value": getattr(goal, "current_value", 0),
+            "user": goal.user, 
+            "finished_at": goal.finished_at,
         })
 
     return render(request, "goals/feed.html", {"goals": feed_goals})
@@ -61,7 +63,10 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            #to the main route
+            # Check if there's a next parameter
+            next_url = request.GET.get("next")
+            if next_url:
+                return redirect(next_url)
             return redirect("index")
         else:
             messages.error(request, "Invalid username or password.")
@@ -133,10 +138,37 @@ def load_units(request):
 
 
 def dashboard(request, username):
+    goals = Goal.objects.filter(user=request.user).order_by("-created_at")
+    dashboard_goals = []
+    for goal in goals:
+        total_progress = goal.get_current_value()
+        if goal.target_value > 0:
+            progress_percent = min(100, (total_progress / goal.target_value) * 100)
+        else:
+            progress_percent = 0
 
+        days_remaining = goal.days_remaining()
+
+        dashboard_goals.append({
+            "id": goal.id,
+            "title": goal.title,
+            "description": goal.description,
+            "unit": goal.unit,
+            "target_value": goal.target_value,
+            "deadline": goal.deadline,
+            "days_remaining": days_remaining,
+            "total_progress": total_progress,
+            "progress_percent": progress_percent,
+            "current_value": getattr(goal, "current_value", 0),
+            "today_progress": goal.has_today_progress(request.user),
+            "user": goal.user,
+            "is_completed": goal.is_completed(),
+            "is_overdue": goal.is_overdue(),
+            "finished_at": goal.finished_at,
+        })
     return render(request, "goals/dashboard.html", {
         "user": request.user,
-        
+        "goals": dashboard_goals,
     })
 
 
@@ -307,17 +339,16 @@ def goals_api(request):
         ]
 
     dashboard_goals = []
-    today = now().date()
     for goal in filtered_goals:
         total_progress = goal.get_current_value()
         if goal.target_value > 0:
             progress_percent = min(100, (total_progress / goal.target_value) * 100)
         else:
             progress_percent = 0
-        if goal.deadline and today <= goal.deadline:
-            days_remaining = (goal.deadline - today).days + 1
-        else:
-            days_remaining = 0
+
+        # Use model's days_remaining() for consistency
+        days_remaining = goal.days_remaining()
+
         dashboard_goals.append({
             "id": goal.id,
             "title": goal.title,
@@ -331,6 +362,9 @@ def goals_api(request):
             "current_value": getattr(goal, "current_value", 0),
             "today_progress": goal.has_today_progress(request.user),
             "user": goal.user,
+            "is_completed": goal.is_completed(),
+            "is_overdue": goal.is_overdue(),
+            "finished_at": goal.finished_at,
         })
 
     html = render_to_string("goals/_goal_card.html", {
