@@ -116,10 +116,10 @@
       <div class="modern-card-body py-5">
         <i data-lucide="target" style="width: 64px; height: 64px; color: var(--neutral-400);" class="mb-4"></i>
         <h4 class="text-muted">No goals found</h4>
-        <p class="text-muted mb-4">Start your journey by creating your first goal!</p>
+        <p class="text-muted mb-4">Start your journey by creating your next goal!</p>
         {% if user.is_authenticated %}
         <a href="{% url 'create_goal' %}" class="btn btn-primary-modern">
-          <i data-lucide="plus" class="me-2"></i>Create Your First Goal
+          <i data-lucide="plus" class="me-2"></i>Create Your Next Goal
         </a>
         {% else %}
         <a href="{% url 'register' %}" class="btn btn-primary-modern">
