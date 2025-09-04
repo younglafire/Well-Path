@@ -83,22 +83,43 @@
           {% endif %}
         </div>
       {% endif %}
-      </div>
-      <!-- Likes, comments section -->
-      <div class="goal-actions d-flex justify-content-between mt-3">
-        <button 
-            class="btn btn-sm btn-outline-primary like-btn" 
-            data-goal-id="{{ goal.id }}" 
-            data-like-url="{% url 'like_goal' goal.id %}">
-          ❤️ <span class="like-count">{{ goal.likes_count }}</span>
-        </button>
 
-        <button 
-            class="btn btn-sm btn-outline-secondary comment-btn" 
-            data-goal-id="{{ goal.id }}">
-          💬 <span class="comment-count">{{ goal.comments_count }}</span>
-        </button>
-      </div>
+<!-- Likes, comments section -->
+<div class="goal-actions d-flex justify-content-between mt-3">
+  <button 
+      class="btn btn-sm btn-outline-primary like-btn" 
+      data-goal-id="{{ goal.id }}" 
+      data-like-url="{% url 'like_goal' goal.id %}">
+    ❤️ <span class="like-count">{{ goal.likes_count }}</span>
+  </button>
+
+  <button 
+      class="btn btn-sm btn-outline-secondary comment-btn" 
+      data-goal-id="{{ goal.id }}"
+      data-comments-url="{% url 'comment_goal' goal.id %}">
+    💬 <span class="comment-count">{{ goal.comments_count }}</span>
+  </button>
+</div>
+
+<!-- Comments Section -->
+<div class="comments-container mt-3" id="comments-{{ goal.id }}" style="display: none;">
+  <!-- Existing comments will be loaded here via JS -->
+  <div class="comment-list"></div>
+
+  <!-- Add comment form -->
+  {% if user.is_authenticated %}
+  <form 
+      class="comment-form d-flex mt-2" 
+      data-goal-id="{{ goal.id }}"
+      data-comments-url="{% url 'comment_goal' goal.id %}">
+    <input type="text" class="form-control form-control-sm me-2 comment-input" 
+          placeholder="Write a comment..." required>
+    <button type="submit" class="btn btn-sm btn-primary">Post</button>
+  </form>
+  {% else %}
+  <p class="text-muted small">Login to comment</p>
+  {% endif %}
+</div>
 
       <div class="goal-card-footer">
         <div class="d-flex align-items-center text-muted">

@@ -10,7 +10,7 @@ from django.views.decorators.http import require_POST
 
 
 
-from .models import Category, Goal, Progress, ProgressPhoto,Unit,Like
+from .models import Category, Comment, Goal, Progress, ProgressPhoto,Unit,Like
 from .forms import CustomUserCreationForm, GoalForm, GoalEditForm
 # Create your views here.
 
@@ -408,3 +408,26 @@ def like_goal(request, goal_id):
         "liked": liked,
         "likes_count": likes_count
     })
+
+@login_required
+def comment_goal(request, goal_id):
+    goal = get_object_or_404(Goal, id=goal_id)
+
+    if request.method == "POST":
+        # Add comment
+        text = request.POST.get("text")
+        if text:
+            comment = Comment.objects.create(user=request.user, goal=goal, text=text)
+            return JsonResponse({
+                "id": comment.id,
+                "user": comment.user.username,
+                "text": comment.text,
+                "created_at": comment.created_at.strftime("%Y-%m-%d %H:%M"),
+            })
+
+    elif request.method == "GET":
+        # Get comments
+        comments = goal.comments.order_by("-created_at").values("id", "user__username", "text", "created_at")
+        return JsonResponse(list(comments), safe=False)
+
+    return JsonResponse({"error": "Invalid request"}, status=400)

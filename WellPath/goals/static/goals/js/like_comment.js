@@ -43,5 +43,78 @@
           }
           return cookieValue;
         }
+
+        // Comments
+// Toggle + load comments
+document.querySelectorAll(".comment-btn").forEach(button => {
+    button.addEventListener("click", function () {
+      const goalId = this.dataset.goalId;
+      const url = this.dataset.commentsUrl;
+      const commentSection = document.getElementById(`comments-${goalId}`);
+  
+      if (commentSection.style.display === "none") {
+        commentSection.style.display = "block";
+  
+        // Load comments if empty
+        const list = commentSection.querySelector(".comment-list");
+        if (!list.dataset.loaded) {
+          fetch(url, { credentials: "same-origin" })
+            .then(r => r.json())
+            .then(data => {
+              list.innerHTML = "";
+              data.comments.forEach(c => {
+                const div = document.createElement("div");
+                div.className = "comment mb-1";
+                div.innerHTML = `<strong>${c.user}</strong>: ${c.text}`;
+                list.appendChild(div);
+              });
+              list.dataset.loaded = "true";
+            })
+            .catch(() => {
+              list.innerHTML = "<p class='text-muted'>Error loading comments.</p>";
+            });
+        }
+  
+      } else {
+        commentSection.style.display = "none";
+      }
+    });
+  });
+  
+  // Submit new comment
+  document.querySelectorAll(".comment-form").forEach(form => {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+  
+      const goalId = this.dataset.goalId;
+      const url = this.dataset.commentsUrl;
+      const input = this.querySelector(".comment-input");
+      const list = this.closest(".comments-container").querySelector(".comment-list");
+  
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
+          "Content-Type": "application/json"
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({ text: input.value })
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            const div = document.createElement("div");
+            div.className = "comment mb-1";
+            div.innerHTML = `<strong>${data.comment.user}</strong>: ${data.comment.text}`;
+            list.appendChild(div);
+            input.value = "";
+          }
+        });
+    });
+  });
+  
+
       });
+
+
   
