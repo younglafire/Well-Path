@@ -148,7 +148,7 @@ class SocialFeed {
         </div>
         <div class="comment-content">
           <div class="comment-header">
-            <span class="comment-username">${comment.user__username}</span>
+            <span class="comment-username">${comment.user || comment.user__username}</span>
             <span class="comment-time">${this.formatTime(comment.created_at)}</span>
           </div>
           <div class="comment-text">${comment.text}</div>
@@ -157,6 +157,11 @@ class SocialFeed {
     `).join('');
 
     container.innerHTML = commentsHtml;
+    
+    // Re-initialize Lucide icons for new content
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
   }
 
   // Handle comment form submission
