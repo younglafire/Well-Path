@@ -11,9 +11,13 @@
         <p class="page-subtitle">Get inspired by what others are achieving</p>
     </div>
 
-    <!-- Goals Grid -->
-    <div class="row">
-        {% include 'goals/_goal_card.html' with goals=goals show_progress_form=False %}
+    <!-- Goals Feed -->
+    <div class="goals-feed">
+        {% include 'goals/_goal_card_feed.html' with goals=goals show_progress_form=False %}
     </div>
 </div>
+{% load static %}
+{% endblock %}
+{% block extra_scripts %}
+<script src="{% static 'goals/js/like_comment.js' %}"></script>
 {% endblock %}

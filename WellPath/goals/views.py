@@ -6,10 +6,11 @@ from django.contrib import messages
 from django.utils.timezone import now
 from datetime import timedelta
 from django.template.loader import render_to_string
+from django.views.decorators.http import require_POST
 
 
 
-from .models import Category, Goal, Progress, ProgressPhoto,Unit
+from .models import Category, Goal, Progress, ProgressPhoto,Unit,Like
 from .forms import CustomUserCreationForm, GoalForm, GoalEditForm
 # Create your views here.
 
@@ -21,8 +22,12 @@ def feed(request):
     goals = [g for g in all_goals if not g.is_completed() and not g.is_overdue()]
     feed_goals = []
     today = now().date()
+
     for goal in goals:
         total_progress = goal.get_current_value()
+        likes_count = goal.likes_count
+        is_liked = request.user.is_authenticated and goal.likes.filter(user=request.user).exists()
+        comments_count = goal.comments_count       
         if goal.target_value > 0:
             progress_percent = min(100, (total_progress / goal.target_value) * 100)
         else:
@@ -32,6 +37,7 @@ def feed(request):
             days_remaining = (goal.deadline - today).days + 1
         else:
             days_remaining = 0
+        
 
         feed_goals.append({
             "id": goal.id,
@@ -46,6 +52,9 @@ def feed(request):
             "current_value": getattr(goal, "current_value", 0),
             "user": goal.user, 
             "finished_at": goal.finished_at,
+            "likes_count" : likes_count,
+            "is_liked" : is_liked,
+            "comments_count" : comments_count
         })
 
     return render(request, "goals/feed.html", {"goals": feed_goals})
@@ -206,7 +215,7 @@ def add_progress(request):
         messages.success(request, "Congratulations! You've achieved your goal.")
 
         return redirect("goal_detail", goal_id=goal_id)
-    return redirect("index")
+    return redirect("goal_detail", goal_id=goal_id)
 
 from datetime import timedelta
 
@@ -373,3 +382,29 @@ def goals_api(request):
     }, request=request)
 
     return JsonResponse({"html": html})
+
+
+@login_required
+@require_POST
+def like_goal(request, goal_id):
+    goal = get_object_or_404(Goal, pk=goal_id)
+
+    # check if user already liked
+    like_obj = Like.objects.filter(user=request.user, goal=goal).first()
+
+    if like_obj:
+        # unlike
+        like_obj.delete()
+        liked = False
+    else:
+        # like
+        Like.objects.create(user=request.user, goal=goal)
+        liked = True
+
+    # fresh count
+    likes_count = goal.likes_count
+
+    return JsonResponse({
+        "liked": liked,
+        "likes_count": likes_count
+    })

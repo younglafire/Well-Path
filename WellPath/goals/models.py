@@ -92,6 +92,18 @@ class Goal(models.Model):
     def __str__(self):
         return f"Goal: {self.title}, User: {self.user.username}"
 
+    @property
+    def likes_count(self):
+        return self.likes.count()
+
+    @property
+    def comments_count(self):
+        return self.comments.count()
+
+    def is_liked_by(self, user):
+        return self.likes.filter(user=user).exists()
+
+
 
 
     
@@ -126,3 +138,29 @@ class ProgressPhoto(models.Model):
         if not image.content_type.startswith("image/"):
             raise ValidationError("Invalid file type. Only images allowed.") 
     image = models.ImageField(upload_to="progress_photos/", validators=[validate_image])
+
+
+class Like(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="likes")
+    goal = models.ForeignKey("Goal", on_delete=models.CASCADE, related_name="likes")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "goal")  # one like per user per goal
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user} liked {self.goal.title}"
+
+
+class Comment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
+    goal = models.ForeignKey("Goal", on_delete=models.CASCADE, related_name="comments")
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]  # oldest first
+
+    def __str__(self):
+        return f"{self.user} on {self.goal.title}: {self.text[:20]}"
