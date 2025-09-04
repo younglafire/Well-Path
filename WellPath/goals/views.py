@@ -19,42 +19,39 @@ def index(request):
 
 def feed(request):
     all_goals = Goal.objects.filter(is_public=True).order_by("-created_at")
-    goals = [g for g in all_goals if not g.is_completed() and not g.is_overdue()]
     feed_goals = []
     today = now().date()
 
-    for goal in goals:
+    for goal in all_goals:
         total_progress = goal.get_current_value()
-        likes_count = goal.likes_count
-        is_liked = request.user.is_authenticated and goal.likes.filter(user=request.user).exists()
-        comments_count = goal.comments_count       
+        
         if goal.target_value > 0:
             progress_percent = min(100, (total_progress / goal.target_value) * 100)
         else:
             progress_percent = 0
 
-        if goal.deadline and today <= goal.deadline:
-            days_remaining = (goal.deadline - today).days + 1
-        else:
-            days_remaining = 0
-        
+        days_remaining = goal.days_remaining()
 
         feed_goals.append({
             "id": goal.id,
             "title": goal.title,
             "description": goal.description,
+            "category": goal.category,
             "unit": goal.unit,
             "target_value": goal.target_value,
             "deadline": goal.deadline,
             "days_remaining": days_remaining,
             "total_progress": total_progress,
             "progress_percent": progress_percent,
-            "current_value": getattr(goal, "current_value", 0),
             "user": goal.user, 
+            "created_at": goal.created_at,
             "finished_at": goal.finished_at,
-            "likes_count" : likes_count,
-            "is_liked" : is_liked,
-            "comments_count" : comments_count
+            "likes_count": goal.likes_count,
+            "is_liked": request.user.is_authenticated and goal.is_liked_by(request.user),
+            "comments_count": goal.comments_count,
+            "is_completed": goal.is_completed(),
+            "is_overdue": goal.is_overdue(),
+            "status": goal.status,
         })
 
     return render(request, "goals/feed.html", {"goals": feed_goals})
@@ -414,20 +411,25 @@ def comment_goal(request, goal_id):
     goal = get_object_or_404(Goal, id=goal_id)
 
     if request.method == "POST":
-        # Add comment
-        text = request.POST.get("text")
+        import json
+        data = json.loads(request.body)
+        text = data.get("text", "").strip()
+        
         if text:
             comment = Comment.objects.create(user=request.user, goal=goal, text=text)
             return JsonResponse({
+                "success": True,
                 "id": comment.id,
                 "user": comment.user.username,
                 "text": comment.text,
                 "created_at": comment.created_at.strftime("%Y-%m-%d %H:%M"),
             })
+        else:
+            return JsonResponse({"error": "Comment text is required"}, status=400)
 
     elif request.method == "GET":
         # Get comments
-        comments = goal.comments.order_by("-created_at").values("id", "user__username", "text", "created_at")
+        comments = goal.comments.order_by("created_at").values("id", "user__username", "text", "created_at")
         return JsonResponse(list(comments), safe=False)
 
     return JsonResponse({"error": "Invalid request"}, status=400)
