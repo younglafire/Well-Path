@@ -29,17 +29,15 @@
                                 <small class="text-muted">{{ goal.created_at|timesince }} ago</small>
                             </div>
                         </div>
+                        <a href="{% url 'category' %}" class="text-muted text-decoration-none">
                         <div class="post-status">
-                            <span class="status-badge status-{{ goal.status }}">
-                                {% if goal.is_completed %}
-                                    <i data-lucide="check-circle" class="me-1"></i>Completed
-                                {% elif goal.is_overdue %}
-                                    <i data-lucide="alert-circle" class="me-1"></i>Overdue
-                                {% else %}
-                                    <i data-lucide="play-circle" class="me-1"></i>Active
-                                {% endif %}
+                            <div class="meta-item">
+                                <i data-lucide="folder" class="me-1"></i>
+                                <span>{{ goal.category.cat }}</span>
+                            </div>
                             </span>
                         </div>
+                        </a>
                     </div>
 
                     <!-- Post Content -->

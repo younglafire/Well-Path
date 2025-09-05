@@ -19,6 +19,7 @@ def index(request):
 
 def feed(request):
     all_goals = Goal.objects.filter(is_public=True).order_by("-created_at")
+    all_goals = [goal for goal in all_goals if goal.status == "active"]
     feed_goals = []
     today = now().date()
 
@@ -436,3 +437,7 @@ def comment_goal(request, goal_id):
         return JsonResponse(list(comments), safe=False)
 
     return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+def category(request):
+    ...
