@@ -11,7 +11,7 @@
                 <small class="text-muted">{{ goal.created_at|timesince }} ago</small>
             </div>
         </div>
-        <a href="{% url 'category' %}" class="text-muted text-decoration-none">
+        <a href="{% url 'category' {{ goal.category.cat }} %}" class="text-muted text-decoration-none">
         <div class="post-status">
             <div class="meta-item">
                 <i data-lucide="folder" class="me-1"></i>
@@ -62,10 +62,6 @@
 
         <!-- Goal Meta Info -->
         <div class="goal-meta-info">
-            <div class="meta-item">
-                <i data-lucide="folder" class="me-1"></i>
-                <span>{{ goal.category.cat }}</span>
-            </div>
             {% if goal.deadline %}
             <div class="meta-item">
                 <i data-lucide="calendar" class="me-1"></i>
