@@ -1,4 +1,5 @@
 {% extends 'goals/base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="container">
@@ -6,18 +7,39 @@
     <div class="page-header">
         <h1 class="page-title">
             <i data-lucide="users" class="me-3"></i>
-            Community Goals
+            Community Feed
         </h1>
-        <p class="page-subtitle">Get inspired by what others are achieving</p>
+        <p class="page-subtitle">Discover and get inspired by what others are achieving</p>
     </div>
 
-    <!-- Goals Feed -->
-    <div class="goals-feed">
-        {% include 'goals/_goal_card_feed.html' with goals=goals show_progress_form=False %}
+    <!-- Category Filter -->
+    <div class="modern-card mb-4">
+        <div class="modern-card-body">
+            <div class="d-flex flex-wrap gap-2 justify-content-center">
+                <span class="btn btn-primary-modern btn-sm">
+                    <i data-lucide="users" class="me-1"></i>All Categories
+                </span>
+                {% for category in categories %}
+                <a href="{% url 'category' category.slug %}" class="btn btn-secondary-modern btn-sm">
+                    <i data-lucide="folder" class="me-1"></i>{{ category.cat }}
+                    <span class="badge bg-light text-dark ms-1">{{ category.active_goals_count }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Feed Container -->
+    <div class="social-feed">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-xl-6">
+                {% include 'goals/_feed_card.html' with goals=goals %}
+            </div>
+        </div>
     </div>
 </div>
-{% load static %}
 {% endblock %}
+
 {% block extra_scripts %}
-<script src="{% static 'goals/js/like_comment.js' %}"></script>
+<script src="{% static 'goals/js/social-feed.js' %}"></script>
 {% endblock %}
