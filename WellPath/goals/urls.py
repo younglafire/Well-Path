@@ -18,6 +18,7 @@ urlpatterns = [
     path('history/<int:goal_id>/', views.progress_history, name='progress_history'),
     path("api/goals", views.goals_api, name="goals_api"),
     path("goals/<int:goal_id>/like/", views.like_goal, name="like_goal"),
-    path("goals/<int:goal_id>/comments/", views.comment_goal, name="comment_goal")
+    path("goals/<int:goal_id>/comments/", views.comment_goal, name="comment_goal"),
+    path("category/<str:category>/",views.category,name="category")
 
 ]

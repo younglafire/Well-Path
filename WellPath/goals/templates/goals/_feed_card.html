@@ -1,0 +1,152 @@
+{% for goal in goals %}
+<div class="social-post" data-goal-id="{{ goal.id }}">
+    <!-- Post Header -->
+    <div class="social-post-header">
+        <div class="d-flex align-items-center">
+            <div class="user-avatar">
+                <i data-lucide="user" style="width: 20px; height: 20px;"></i>
+            </div>
+            <div class="user-info">
+                <h6 class="username mb-0">{{ goal.user.username }}</h6>
+                <small class="text-muted">{{ goal.created_at|timesince }} ago</small>
+            </div>
+        </div>
+        <a href="{% url 'category' %}" class="text-muted text-decoration-none">
+        <div class="post-status">
+            <div class="meta-item">
+                <i data-lucide="folder" class="me-1"></i>
+                <span>{{ goal.category.cat }}</span>
+            </div>
+            </span>
+        </div>
+        </a>
+    </div>
+
+    <!-- Post Content -->
+    <div class="social-post-content">
+        <h4 class="post-title">
+            <a href="{% if user.is_authenticated %}{% url 'goal_detail' goal.id %}{% else %}{% url 'login' %}?next={% url 'goal_detail' goal.id %}{% endif %}" 
+               class="text-decoration-none">
+                {{ goal.title }}
+            </a>
+        </h4>
+        <p class="post-description">{{ goal.description }}</p>
+
+        <!-- Progress Visualization -->
+        <div class="progress-section">
+            <div class="progress-stats">
+                <div class="stat-item">
+                    <span class="stat-value">{{ goal.total_progress|floatformat:1 }}</span>
+                    <span class="stat-label">Current</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ goal.target_value|floatformat:0 }}</span>
+                    <span class="stat-label">Target</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ goal.progress_percent|floatformat:0 }}%</span>
+                    <span class="stat-label">Complete</span>
+                </div>
+            </div>
+            
+            <div class="progress-bar-container">
+                <div class="modern-progress">
+                    <div class="modern-progress-bar" 
+                         style="width: {% if goal.progress_percent > 0 %}{{ goal.progress_percent|floatformat:0 }}{% else %}2{% endif %}%;"></div>
+                </div>
+                <div class="progress-text">
+                    <span>{{ goal.total_progress|floatformat:1 }}/{{ goal.target_value }} {{ goal.unit.name }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goal Meta Info -->
+        <div class="goal-meta-info">
+            <div class="meta-item">
+                <i data-lucide="folder" class="me-1"></i>
+                <span>{{ goal.category.cat }}</span>
+            </div>
+            {% if goal.deadline %}
+            <div class="meta-item">
+                <i data-lucide="calendar" class="me-1"></i>
+                <span>Due {{ goal.deadline|date:"M d, Y" }}</span>
+            </div>
+            {% endif %}
+            {% if goal.days_remaining %}
+            <div class="meta-item">
+                <i data-lucide="clock" class="me-1"></i>
+                <span>{{ goal.days_remaining }} days left</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Post Actions -->
+    <div class="social-post-actions">
+        <button class="action-btn like-btn {% if goal.is_liked %}liked{% endif %}" 
+                data-goal-id="{{ goal.id }}" 
+                data-like-url="{% url 'like_goal' goal.id %}">
+            <i data-lucide="heart" class="action-icon"></i>
+            <span class="like-count">{{ goal.likes_count }}</span>
+            <span class="action-text">Like</span>
+        </button>
+        
+        <button class="action-btn comment-btn" 
+                data-goal-id="{{ goal.id }}"
+                data-comments-url="{% url 'comment_goal' goal.id %}">
+            <i data-lucide="message-circle" class="action-icon"></i>
+            <span class="comment-count">{{ goal.comments_count }}</span>
+            <span class="action-text">Comment</span>
+        </button>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="comments-section" id="comments-{{ goal.id }}" style="display: none;">
+        <div class="comments-list" data-loaded="false">
+            <!-- Comments will be loaded here via AJAX -->
+        </div>
+        
+        {% if user.is_authenticated %}
+        <div class="comment-form-container">
+            <form class="comment-form" data-goal-id="{{ goal.id }}" data-comments-url="{% url 'comment_goal' goal.id %}">
+                {% csrf_token %}
+                <div class="d-flex gap-2">
+                    <div class="comment-avatar">
+                        <i data-lucide="user" style="width: 16px; height: 16px;"></i>
+                    </div>
+                    <input type="text" class="comment-input" placeholder="Write a comment..." required>
+                    <button type="submit" class="btn btn-primary-modern btn-sm">
+                        <i data-lucide="send" style="width: 14px; height: 14px;"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% else %}
+        <div class="text-center py-3">
+            <a href="{% url 'login' %}" class="text-muted text-decoration-none">
+                <i data-lucide="log-in" class="me-1"></i>Login to comment
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% empty %}
+<div class="empty-feed">
+    <div class="modern-card text-center">
+        <div class="modern-card-body py-5">
+            <i data-lucide="users" style="width: 64px; height: 64px; color: var(--neutral-400);" class="mb-4"></i>
+            <h4 class="text-muted">No public goals yet</h4>
+            <p class="text-muted mb-4">Be the first to share your goals with the community!</p>
+            {% if user.is_authenticated %}
+            <a href="{% url 'create_goal' %}" class="btn btn-primary-modern">
+                <i data-lucide="plus" class="me-2"></i>Create Your First Goal
+            </a>
+            {% else %}
+            <a href="{% url 'register' %}" class="btn btn-primary-modern">
+                <i data-lucide="user-plus" class="me-2"></i>Join WellPath
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endfor %}
