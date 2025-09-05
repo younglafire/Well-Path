@@ -430,10 +430,14 @@ def comment_goal(request, goal_id):
 
     elif request.method == "GET":
         # Get comments
-        comments = list(goal.comments.order_by("created_at").values("id", "user__username", "text", "created_at"))
-        # Normalize the user field for consistency
-        for comment in comments:
-            comment['user'] = comment['user__username']
+        comments = []
+        for comment in goal.comments.order_by("created_at"):
+            comments.append({
+                "id": comment.id,
+                "user": comment.user.username,
+                "text": comment.text,
+                "created_at": comment.created_at.isoformat(),
+            })
         return JsonResponse(list(comments), safe=False)
 
     return JsonResponse({"error": "Invalid request"}, status=400)
