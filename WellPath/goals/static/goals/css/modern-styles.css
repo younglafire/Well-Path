@@ -424,7 +424,12 @@ p {
   border: 1px solid var(--neutral-200);
   transition: all 0.3s ease;
   overflow: hidden;
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-6); flex: 1; /* Fill available height */
+  display: flex;
+  flex-direction: column;
+}
+.col-lg-6, .col-xl-4 {
+  display: flex;
 }
 
 .goal-card:hover {
@@ -440,6 +445,7 @@ p {
 
 .goal-card-body {
   padding: var(--space-6);
+  flex-grow: 1;
 }
 
 .goal-card-footer {
