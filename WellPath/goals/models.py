@@ -9,11 +9,25 @@ class User(AbstractUser):
 class Category(models.Model):
     order = models.PositiveIntegerField(default=0)  
     cat = models.CharField(max_length=64)
+    slug = models.SlugField(max_length=70, unique=True, blank=True)
     units = models.ManyToManyField("Unit", blank=True, related_name="categories")
 
     def __str__(self):
         return self.cat
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.cat)
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('category', kwargs={'category_slug': self.slug})
+
+    @property
+    def active_goals_count(self):
+        return self.goals.filter(is_public=True).count()
     class Meta:
         ordering = ['order']
 
@@ -27,6 +41,7 @@ class Unit(models.Model):
 
     class Meta:
         ordering = ['order']
+        verbose_name_plural = "Categories"
 
 
 class Goal(models.Model):

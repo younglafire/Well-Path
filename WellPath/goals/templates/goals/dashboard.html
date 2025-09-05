@@ -11,6 +11,43 @@
         <p class="page-subtitle">Track your progress and manage your goals</p>
     </div>
 
+    <!-- Category Overview -->
+    {% if category_stats %}
+    <div class="modern-card mb-4">
+        <div class="modern-card-header">
+            <h4 class="mb-0">
+                <i data-lucide="folder" class="me-2"></i>
+                Goals by Category
+            </h4>
+        </div>
+        <div class="modern-card-body">
+            <div class="row">
+                {% for cat_id, stats in category_stats.items %}
+                {% if stats.total > 0 %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="category-stat-card">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="bg-primary-100 rounded-circle p-2 me-3">
+                                <i data-lucide="folder" style="width: 20px; height: 20px; color: var(--primary-600);"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">{{ stats.category.cat }}</h6>
+                                <small class="text-muted">{{ stats.total }} goal{{ stats.total|pluralize }}</small>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between text-sm">
+                            <span class="text-primary">{{ stats.active }} Active</span>
+                            <span class="text-success">{{ stats.completed }} Completed</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Dashboard Tabs -->
     <div class="modern-tabs">
         <button class="modern-tab active" id="active-tab" data-tooltip="View your ongoing goals">
@@ -22,8 +59,6 @@
         <button class="modern-tab" id="overdue-tab" data-tooltip="Goals that need attention">
             <i data-lucide="alert-circle" class="me-2"></i>Overdue
         </button>
-    </div>
-        </div>
     </div>
     <!-- Dashboard Content -->
     <div id="dashboard-content" class="fade-in">

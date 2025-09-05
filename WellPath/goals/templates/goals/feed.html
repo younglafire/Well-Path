@@ -12,11 +12,29 @@
         <p class="page-subtitle">Discover and get inspired by what others are achieving</p>
     </div>
 
+    <!-- Category Filter -->
+    <div class="modern-card mb-4">
+        <div class="modern-card-body">
+            <div class="d-flex flex-wrap gap-2 justify-content-center">
+                <span class="btn btn-primary-modern btn-sm">
+                    <i data-lucide="users" class="me-1"></i>All Categories
+                </span>
+                {% for category in categories %}
+                <a href="{% url 'category' category.slug %}" class="btn btn-secondary-modern btn-sm">
+                    <i data-lucide="folder" class="me-1"></i>{{ category.cat }}
+                    <span class="badge bg-light text-dark ms-1">{{ category.active_goals_count }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
     <!-- Feed Container -->
     <div class="social-feed">
         <div class="row justify-content-center">
             <div class="col-lg-8 col-xl-6">
-                {% include 'goals/_feed_card.html' with goals=goals %}            </div>
+                {% include 'goals/_feed_card.html' with goals=goals %}
+            </div>
         </div>
     </div>
 </div>

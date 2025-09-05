@@ -8,6 +8,9 @@ from datetime import timedelta
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
+# Add this context processor function
+def categories_context(request):
+    return {'categories': Category.objects.all()}
 
 
 from .models import Category, Comment, Goal, Progress, ProgressPhoto,Unit,Like
@@ -21,6 +24,7 @@ def feed(request):
     all_goals = Goal.objects.filter(is_public=True).order_by("-created_at")
     all_goals = [goal for goal in all_goals if goal.status == "active"]
     feed_goals = []
+    categories = Category.objects.all()
     today = now().date()
 
     for goal in all_goals:
@@ -55,7 +59,10 @@ def feed(request):
             "status": goal.status,
         })
 
-    return render(request, "goals/feed.html", {"goals": feed_goals})
+    return render(request, "goals/feed.html", {
+        "goals": feed_goals,
+        "categories": categories
+    })
 
 def login_view(request):
     #Basically paste from django doc
@@ -147,6 +154,21 @@ def load_units(request):
 def dashboard(request, username):
     goals = Goal.objects.filter(user=request.user).order_by("-created_at")
     dashboard_goals = []
+    categories = Category.objects.all()
+    
+    # Get category stats for dashboard
+    category_stats = {}
+    for category in categories:
+        user_goals_in_category = goals.filter(category=category)
+        active_count = len([g for g in user_goals_in_category if not g.is_completed() and not g.is_overdue()])
+        completed_count = len([g for g in user_goals_in_category if g.is_completed()])
+        category_stats[category.id] = {
+            'category': category,
+            'active': active_count,
+            'completed': completed_count,
+            'total': user_goals_in_category.count()
+        }
+    
     for goal in goals:
         total_progress = goal.get_current_value()
         if goal.target_value > 0:
@@ -176,6 +198,8 @@ def dashboard(request, username):
     return render(request, "goals/dashboard.html", {
         "user": request.user,
         "goals": dashboard_goals,
+        "categories": categories,
+        "category_stats": category_stats,
     })
 
 
@@ -446,28 +470,53 @@ def comment_goal(request, goal_id):
 def category(request, category_slug):
     category = get_object_or_404(Category, slug=category_slug)
 
-    goals = Goal.objects.filter(
+    all_goals = Goal.objects.filter(
         category=category,
-        is_public=True,
-        status="active"
+        is_public=True
     ).order_by("-created_at")
+    
+    # Filter by status like in feed
+    goals = [goal for goal in all_goals if goal.status == "active"]
 
-    # reuse feed logic
     feed_goals = []
+    today = now().date()
+
     for goal in goals:
+        total_progress = goal.get_current_value()
+        
+        if goal.target_value > 0:
+            progress_percent = min(100, (total_progress / goal.target_value) * 100)
+        else:
+            progress_percent = 0
+
+        days_remaining = goal.days_remaining()
+
         feed_goals.append({
             "id": goal.id,
             "title": goal.title,
             "description": goal.description,
             "category": goal.category,
-            "progress_percent": goal.progress_percent(),
-            "likes_count": goal.likes_count,
-            "comments_count": goal.comments_count,
-            "user": goal.user,
+            "unit": goal.unit,
+            "target_value": goal.target_value,
+            "deadline": goal.deadline,
+            "days_remaining": days_remaining,
+            "total_progress": total_progress,
+            "progress_percent": progress_percent,
+            "user": goal.user, 
             "created_at": goal.created_at,
+            "finished_at": goal.finished_at,
+            "likes_count": goal.likes_count,
+            "is_liked": request.user.is_authenticated and goal.is_liked_by(request.user),
+            "comments_count": goal.comments_count,
+            "is_completed": goal.is_completed(),
+            "is_overdue": goal.is_overdue(),
+            "status": goal.status,
         })
+
+    categories = Category.objects.all()
 
     return render(request, "goals/category.html", {
         "goals": feed_goals,
         "category": category,
+        "categories": categories,
     })
