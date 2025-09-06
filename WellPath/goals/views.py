@@ -7,8 +7,6 @@ from django.utils.timezone import now
 from datetime import timedelta
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
-from django.core.paginator import Paginator
-
 
 # Add this context processor function
 def categories_context(request):
@@ -28,17 +26,11 @@ def feed(request):
     feed_goals = []
     categories = Category.objects.all()
     today = now().date()
-    page_number = request.GET.get('page', 1)    
-    paginator = Paginator(all_goals,2)
-    page_obj = paginator.get_page(page_number)
 
-    for goal in page_obj.object_list:
+    for goal in all_goals:
         total_progress = goal.get_current_value()
         
-        if goal.target_value > 0:
-            progress_percent = min(100, (total_progress / goal.target_value) * 100)
-        else:
-            progress_percent = 0
+ 
 
         days_remaining = goal.days_remaining()
 
@@ -52,7 +44,7 @@ def feed(request):
             "deadline": goal.deadline,
             "days_remaining": days_remaining,
             "total_progress": total_progress,
-            "progress_percent": progress_percent,
+            "progress_percent": goal.progress_percentage(),
             "user": goal.user, 
             "created_at": goal.created_at,
             "finished_at": goal.finished_at,
@@ -68,7 +60,6 @@ def feed(request):
     return render(request, "goals/feed.html", {
         "goals": feed_goals,
         "categories": categories,
-        'page_obj': page_obj
     })
 
 def login_view(request):
@@ -178,10 +169,7 @@ def dashboard(request, username):
     
     for goal in goals:
         total_progress = goal.get_current_value()
-        if goal.target_value > 0:
-            progress_percent = min(100, (total_progress / goal.target_value) * 100)
-        else:
-            progress_percent = 0
+ 
 
         days_remaining = goal.days_remaining()
 
@@ -194,7 +182,7 @@ def dashboard(request, username):
             "deadline": goal.deadline,
             "days_remaining": days_remaining,
             "total_progress": total_progress,
-            "progress_percent": progress_percent,
+            "progress_percent": goal.progress_percentage(),
             "current_value": getattr(goal, "current_value", 0),
             "today_progress": goal.has_today_progress(request.user),
             "user": goal.user,
@@ -379,10 +367,7 @@ def goals_api(request):
     dashboard_goals = []
     for goal in filtered_goals:
         total_progress = goal.get_current_value()
-        if goal.target_value > 0:
-            progress_percent = min(100, (total_progress / goal.target_value) * 100)
-        else:
-            progress_percent = 0
+ 
 
         # Use model's days_remaining() for consistency
         days_remaining = goal.days_remaining()
@@ -396,7 +381,7 @@ def goals_api(request):
             "deadline": goal.deadline,
             "days_remaining": days_remaining,
             "total_progress": total_progress,
-            "progress_percent": progress_percent,
+            "progress_percent": goal.progress_percentage(),
             "current_value": getattr(goal, "current_value", 0),
             "today_progress": goal.has_today_progress(request.user),
             "user": goal.user,
@@ -491,10 +476,7 @@ def category(request, category_slug):
     for goal in goals:
         total_progress = goal.get_current_value()
         
-        if goal.target_value > 0:
-            progress_percent = min(100, (total_progress / goal.target_value) * 100)
-        else:
-            progress_percent = 0
+ 
 
         days_remaining = goal.days_remaining()
 
@@ -508,7 +490,7 @@ def category(request, category_slug):
             "deadline": goal.deadline,
             "days_remaining": days_remaining,
             "total_progress": total_progress,
-            "progress_percent": progress_percent,
+            "progress_percent": goal.progress_percentage(),
             "user": goal.user, 
             "created_at": goal.created_at,
             "finished_at": goal.finished_at,

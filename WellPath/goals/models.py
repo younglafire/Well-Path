@@ -109,7 +109,7 @@ class Goal(models.Model):
         elif self.is_overdue():
             return "overdue"
         return "active"
-
+    
     def progress_percentage(self):
         total = self.get_current_value()
         if self.target_value == 0:

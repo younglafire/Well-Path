@@ -8,7 +8,7 @@
             </div>
             <div class="user-info">
                 <h6 class="username mb-0">{{ goal.user.username }}</h6>
-                <small class="text-muted">{{ goal.created_at|timesince }} ago</small>
+                <small class="text-muted">{{ goal.created_at }}</small>
             </div>
         </div>
         {% if goal.category %}
@@ -80,14 +80,23 @@
 
     <!-- Post Actions -->
     <div class="social-post-actions">
-        <button class="action-btn like-btn {% if goal.is_liked %}liked{% endif %}" 
-                data-goal-id="{{ goal.id }}" 
-                data-like-url="{% url 'like_goal' goal.id %}">
-            <i data-lucide="heart" class="action-icon"></i>
-            <span class="like-count">{{ goal.likes_count }}</span>
-            <span class="action-text">Like</span>
-        </button>
+        {% if user.is_authenticated %}
+            <button class="action-btn like-btn {% if goal.is_liked %}liked{% endif %}" 
+                    data-goal-id="{{ goal.id }}" 
+                    data-like-url="{% url 'like_goal' goal.id %}">
+                <i data-lucide="heart" class="action-icon"></i>
+                <span class="like-count">{{ goal.likes_count }}</span>
+                <span class="action-text">Like</span>
+            </button>
+        {% else %}
+            <a href="{% url 'login' %}?next={{ request.path }}" class="action-btn text-decoration-none ">
+                <i data-lucide="heart" class="action-icon"></i>
+                <span class="like-count">{{ goal.likes_count }}</span>
+                <span class="action-text">Like</span>
+            </a>
+        {% endif %}
     </div>
+    
         
     <!-- Comments Section -->
     <div class="comments-section" id="comments-{{ goal.id }}" style="display: none;">
