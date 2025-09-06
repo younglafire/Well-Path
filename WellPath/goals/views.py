@@ -7,6 +7,8 @@ from django.utils.timezone import now
 from datetime import timedelta
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
+from django.core.paginator import Paginator
+
 
 # Add this context processor function
 def categories_context(request):
@@ -26,8 +28,11 @@ def feed(request):
     feed_goals = []
     categories = Category.objects.all()
     today = now().date()
+    page_number = request.GET.get('page', 1)    
+    paginator = Paginator(all_goals,2)
+    page_obj = paginator.get_page(page_number)
 
-    for goal in all_goals:
+    for goal in page_obj.object_list:
         total_progress = goal.get_current_value()
         
         if goal.target_value > 0:
@@ -57,11 +62,13 @@ def feed(request):
             "is_completed": goal.is_completed(),
             "is_overdue": goal.is_overdue(),
             "status": goal.status,
+            
         })
 
     return render(request, "goals/feed.html", {
         "goals": feed_goals,
-        "categories": categories
+        "categories": categories,
+        'page_obj': page_obj
     })
 
 def login_view(request):
