@@ -47,18 +47,20 @@ The project was structured in four phases:
 
 ## ⚙️ How to Run
 
-1. Clone this repository:
-   ```bash
+Clone this repository:
+
    git clone <your-repo-url>
    cd <your-repo-folder>
-Create and activate a virtual environment:
-python3 -m venv venv
-source venv/bin/activate   # On Windows: venv\Scripts\activate
+
 Install requirements:
 pip install -r requirements.txt
+
 Apply migrations:
 python manage.py migrate
+
 Run the development server:
 python manage.py runserver
+
 Open in your browser:
 http://127.0.0.1:8000/
+
