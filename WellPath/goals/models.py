@@ -38,7 +38,7 @@ class Category(models.Model):
 
     @property
     def active_goals_count(self):
-        return self.goals.filter(is_public=True).count()
+        return sum(1 for goal in self.goals.filter(is_public=True) if goal.status == "active")
 
     class Meta:
         ordering = ["order"]
