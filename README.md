@@ -1,11 +1,11 @@
-# Goal Tracking App
+# Goal Tracking App - WellPath
 
 This project is my **CS50x Final Project** and also a personal project that I built to sharpen my skills in web development.  
 The idea behind it is simple but powerful: **a health-focused goal tracking application** where users can set goals, track their progress, and interact with others for motivation.
 
 ---
 
-## 🚀 About the Project
+##  About the Project
 
 - **Backend & Core Features:** I implemented all the functionality, database models, and logic myself.  
 - **Frontend/UI:** For the user interface, I leveraged AI tools to generate components and layouts, then debugged and adjusted them to integrate smoothly with my backend.  
@@ -13,7 +13,7 @@ The idea behind it is simple but powerful: **a health-focused goal tracking appl
 
 ---
 
-## ✨ Features
+##  Features
 
 - Create, update, delete, and list personal goals (CRUD).
 - Progress tracking (optional).
@@ -24,7 +24,7 @@ The idea behind it is simple but powerful: **a health-focused goal tracking appl
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 - **Backend:** Django / Python  
 - **Database:** SQLite (development) → easily switchable to PostgreSQL (production)  
@@ -34,7 +34,7 @@ The idea behind it is simple but powerful: **a health-focused goal tracking appl
 
 ---
 
-## 📅 Development Timeline
+## Development Timeline
 
 The project was structured in four phases:
 
@@ -45,7 +45,7 @@ The project was structured in four phases:
 
 ---
 
-## ⚙️ How to Run
+## How to Run
 
 Clone this repository:
 
