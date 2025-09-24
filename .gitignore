@@ -1,2 +1,18 @@
-node_modules/
+
+echo "*.pyc
+__pycache__/
+*.pyo
+*.pyd
 .env
+.venv/
+env/
+venv/
+.DS_Store
+*.sqlite3
+media/
+staticfiles/" > .gitignore
+
+# Clean up repository
+git rm --cached *.pyc
+git rm -r --cached __pycache__/
+git commit -m "Clean up unnecessary files from repository"
