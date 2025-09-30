@@ -125,11 +125,6 @@ class Goal(models.Model):
     def is_liked_by(self, user):
         return self.likes.filter(user=user).exists()
 
-
-
-
-    
-
 class Progress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     goal = models.ForeignKey(Goal, on_delete=models.CASCADE, related_name="progresses")
