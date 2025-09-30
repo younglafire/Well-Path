@@ -21,45 +21,21 @@ def index(request):
     return render(request, "goals/index.html")
 
 def feed(request):
-    all_goals = Goal.objects.filter(is_public=True).order_by("-created_at")
-    all_goals = [goal for goal in all_goals if goal.status == "active"]
-    feed_goals = []
-    categories = Category.objects.all()
-    today = now().date()
-
-    for goal in all_goals:
-        total_progress = goal.get_current_value()
-        
- 
-
-        days_remaining = goal.days_remaining()
-
-        feed_goals.append({
-            "id": goal.id,
-            "title": goal.title,
-            "description": goal.description,
-            "category": goal.category,
-            "unit": goal.unit,
-            "target_value": goal.target_value,
-            "deadline": goal.deadline,
-            "days_remaining": days_remaining,
-            "total_progress": total_progress,
-            "progress_percent": goal.progress_percentage(),
-            "user": goal.user, 
-            "created_at": goal.created_at,
-            "finished_at": goal.finished_at,
-            "likes_count": goal.likes_count,
-            "is_liked": request.user.is_authenticated and goal.is_liked_by(request.user),
-            "comments_count": goal.comments_count,
-            "is_completed": goal.is_completed(),
-            "is_overdue": goal.is_overdue(),
-            "status": goal.status,
-            
-        })
+    
+    all_goals = Goal.objects.filter(
+        is_public=True
+        # JOIN goals with users/categories/units in ONE query, Many goals to one user for example
+        ).select_related(
+            'user','category','unit',
+        # JOIN goals with One to Many relationships. One goal to many likes.
+        ).prefetch_related(
+            'likes', 'comments','progresses'
+        )
+    active_goal = [g for g in all_goals if g.status == 'active']
 
     return render(request, "goals/feed.html", {
-        "goals": feed_goals,
-        "categories": categories,
+        "goals": active_goal,
+        "categories": Category.objects.all(),
     })
 
 def login_view(request):
@@ -150,49 +126,28 @@ def load_units(request):
 
 
 def dashboard(request, username):
-    goals = Goal.objects.filter(user=request.user).order_by("-created_at")
-    dashboard_goals = []
+    goals = Goal.objects.filter(
+        user=request.user
+        ).select_related(
+            'unit','category'
+        ).prefetch_related(
+            'progresses'
+        )
     categories = Category.objects.all()
-    
     # Get category stats for dashboard
     category_stats = {}
     for category in categories:
-        user_goals_in_category = goals.filter(category=category)
-        active_count = len([g for g in user_goals_in_category if not g.is_completed() and not g.is_overdue()])
-        completed_count = len([g for g in user_goals_in_category if g.is_completed()])
+        user_goals = [g for g in goals if g.category == category]
         category_stats[category.id] = {
             'category': category,
-            'active': active_count,
-            'completed': completed_count,
-            'total': user_goals_in_category.count()
+            'active': len([g for g in goals if g.status == 'active']),
+            'completed': len([g for g in goals if g.status == 'completed']),
+            'total': len(user_goals)
         }
-    
-    for goal in goals:
-        total_progress = goal.get_current_value()
- 
 
-        days_remaining = goal.days_remaining()
-
-        dashboard_goals.append({
-            "id": goal.id,
-            "title": goal.title,
-            "description": goal.description,
-            "unit": goal.unit,
-            "target_value": goal.target_value,
-            "deadline": goal.deadline,
-            "days_remaining": days_remaining,
-            "total_progress": total_progress,
-            "progress_percent": goal.progress_percentage(),
-            "current_value": getattr(goal, "current_value", 0),
-            "today_progress": goal.has_today_progress(request.user),
-            "user": goal.user,
-            "is_completed": goal.is_completed(),
-            "is_overdue": goal.is_overdue(),
-            "finished_at": goal.finished_at,
-        })
     return render(request, "goals/dashboard.html", {
         "user": request.user,
-        "goals": dashboard_goals,
+        "goals":goals,
         "categories": categories,
         "category_stats": category_stats,
     })
@@ -241,16 +196,14 @@ from django.shortcuts import render, get_object_or_404
 from django.utils.timezone import now
 
 def goal_detail(request, goal_id):
-    goal = get_object_or_404(Goal, id=goal_id)
+    goal = get_object_or_404(
+        Goal.objects.select_related('unit','category','user').prefetch_related('progresses'),
+        id=goal_id
+    )
+    
 
     progress_history = goal.progresses.order_by("date")
     today_progress = goal.has_today_progress(request.user)
-    total_progress = goal.get_current_value()
-
-    if goal.target_value > 0:
-        progress_percent = min(100, (total_progress / goal.target_value) * 100)
-    else:
-        progress_percent = 0
 
     # --- Build full date range from first progress (or creation) to deadline ---
     if progress_history.exists():
@@ -291,7 +244,7 @@ def goal_detail(request, goal_id):
     last_date = min(today, end_date)
     days_passed = (last_date - start_date).days + 1 if last_date >= start_date else 1
 
-    total_progress = float(total_progress)
+    total_progress = goal.get_current_value()
     avg_per_day = total_progress / days_passed if days_passed > 0 else 0
 
     # Needed per day to finish: (target - total_progress) / remaining days
@@ -310,8 +263,6 @@ def goal_detail(request, goal_id):
     return render(request, "goals/goal_detail.html", {
         "goal": goal,
         "today_progress": today_progress,
-        "total_progress": total_progress,
-        "progress_percent": progress_percent,
         "progress_history": progress_history,
         "chart_data": {
             "dates": [d.strftime("%Y-%m-%d") for d in all_dates],
@@ -353,45 +304,25 @@ def progress_history(request, goal_id):
 
 def goals_api(request):
     filter_type = request.GET.get("status", "active")
-    all_goals = Goal.objects.filter(user=request.user)
+    goals = Goal.objects.filter(
+        user=request.user
+    ).select_related(
+        'unit','category'
+    ).prefetch_related(
+        'progresses'
+    )
 
     if filter_type == "completed":
-        filtered_goals = [g for g in all_goals if g.is_completed()]
+        filtered_goals = [g for g in goals if g.status == 'completed']
     elif filter_type == "overdue":
-        filtered_goals = [g for g in all_goals if g.is_overdue() and not g.is_completed()]
+        filtered_goals = [g for g in goals if g.status == 'overdue']
     else:  # active
         filtered_goals = [
-            g for g in all_goals if not g.is_completed() and not g.is_overdue()
+            g for g in goals if g.status == 'active'
         ]
-
-    dashboard_goals = []
-    for goal in filtered_goals:
-        total_progress = goal.get_current_value()
- 
-
-        # Use model's days_remaining() for consistency
-        days_remaining = goal.days_remaining()
-
-        dashboard_goals.append({
-            "id": goal.id,
-            "title": goal.title,
-            "description": goal.description,
-            "unit": goal.unit,
-            "target_value": goal.target_value,
-            "deadline": goal.deadline,
-            "days_remaining": days_remaining,
-            "total_progress": total_progress,
-            "progress_percent": goal.progress_percentage(),
-            "current_value": getattr(goal, "current_value", 0),
-            "today_progress": goal.has_today_progress(request.user),
-            "user": goal.user,
-            "is_completed": goal.is_completed(),
-            "is_overdue": goal.is_overdue(),
-            "finished_at": goal.finished_at,
-        })
-
+    
     html = render_to_string("goals/_goal_card.html", {
-        "goals": dashboard_goals,
+        "goals": filtered_goals,
         "show_progress_form": True
     }, request=request)
 
@@ -462,50 +393,18 @@ def comment_goal(request, goal_id):
 def category(request, category_slug):
     category = get_object_or_404(Category, slug=category_slug)
 
-    all_goals = Goal.objects.filter(
-        category=category,
-        is_public=True
-    ).order_by("-created_at")
-    
-    # Filter by status like in feed
-    goals = [goal for goal in all_goals if goal.status == "active"]
+    goals = Goal.objects.filter(
+        user=request.user
+    ).select_related(
+        "category","unit"
+    ).prefetch_related(
+        "progresses"
+    )
 
-    feed_goals = []
-    today = now().date()
-
-    for goal in goals:
-        total_progress = goal.get_current_value()
-        
- 
-
-        days_remaining = goal.days_remaining()
-
-        feed_goals.append({
-            "id": goal.id,
-            "title": goal.title,
-            "description": goal.description,
-            "category": goal.category,
-            "unit": goal.unit,
-            "target_value": goal.target_value,
-            "deadline": goal.deadline,
-            "days_remaining": days_remaining,
-            "total_progress": total_progress,
-            "progress_percent": goal.progress_percentage(),
-            "user": goal.user, 
-            "created_at": goal.created_at,
-            "finished_at": goal.finished_at,
-            "likes_count": goal.likes_count,
-            "is_liked": request.user.is_authenticated and goal.is_liked_by(request.user),
-            "comments_count": goal.comments_count,
-            "is_completed": goal.is_completed(),
-            "is_overdue": goal.is_overdue(),
-            "status": goal.status,
-        })
-
-    categories = Category.objects.all()
+    active_goals = [g for g in goals if g.status == 'active']
 
     return render(request, "goals/category.html", {
-        "goals": feed_goals,
+        "goals": active_goals,
         "category": category,
-        "categories": categories,
+        "categories": Category.objects.all(),
     })
