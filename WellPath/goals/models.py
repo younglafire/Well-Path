@@ -36,10 +36,6 @@ class Category(models.Model):
         from django.urls import reverse
         return reverse("category", kwargs={"category_slug": self.slug})
 
-    @property
-    def active_goals_count(self):
-        return sum(1 for goal in self.goals.filter(is_public=True) if goal.status == "active")
-
     class Meta:
         ordering = ["order"]
 
@@ -53,7 +49,7 @@ class Unit(models.Model):
 
     class Meta:
         ordering = ['order']
-        verbose_name_plural = "Categories"
+        verbose_name_plural = "Units"
 
 
 class Goal(models.Model):
@@ -75,11 +71,10 @@ class Goal(models.Model):
         related_name="goals"
     )
     target_value = models.FloatField()
-    current_value = models.FloatField(default=0)
     deadline = models.DateField(null=True, blank=True)
-    is_public = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    finished_at = models.DateTimeField(null=True, blank=True)
+    is_public = models.BooleanField(default=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    finished_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     def days_remaining(self):
         """Return number of days left until deadline (or None if no deadline)."""
