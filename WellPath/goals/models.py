@@ -6,65 +6,20 @@ from django.utils.timezone import now
 class User(AbstractUser):
     pass
 
-class Category(models.Model):
-    order = models.PositiveIntegerField(default=0)  
-    cat = models.CharField(max_length=64, unique=True)
-    slug = models.SlugField(max_length=70, unique=True, blank=True)
-    units = models.ManyToManyField("Unit", blank=True, related_name="categories")
-
-    def __str__(self):
-        return self.cat
-
-    def save(self, *args, **kwargs):
-        from django.utils.text import slugify
-
-        if not self.slug:
-            base_slug = slugify(self.cat)
-            slug = base_slug
-            counter = 1
-
-            # ensure unique slug
-            while Category.objects.filter(slug=slug).exclude(id=self.id).exists():
-                slug = f"{base_slug}-{counter}"
-                counter += 1
-
-            self.slug = slug
-
-        super().save(*args, **kwargs)
-
-    def get_absolute_url(self):
-        from django.urls import reverse
-        return reverse("category", kwargs={"category_slug": self.slug})
-
-    class Meta:
-        ordering = ["order"]
-
-
-class Unit(models.Model):
-    order = models.PositiveIntegerField(default=0)  
-    name = models.CharField(max_length=20)  # km, kg, ml, days
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ['order']
-        verbose_name_plural = "Units"
-
 
 class Goal(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     category = models.ForeignKey(
-        Category, 
+        "taxonomy.Category",  # string reference to avoid circular import, using app_label in Meta
         on_delete=models.CASCADE,
         blank=True,
         null=True,
         related_name="goals"
     )
     unit = models.ForeignKey(
-        Unit,
+        "taxonomy.Unit", # string reference to avoid circular import, using app_label in Meta
         on_delete=models.CASCADE,
         null=True,
         blank=True,
@@ -157,27 +112,6 @@ class ProgressPhoto(models.Model):
     image = models.ImageField(upload_to="progress_photos/", validators=[validate_image])
 
 
-class Like(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="likes")
-    goal = models.ForeignKey("Goal", on_delete=models.CASCADE, related_name="likes")
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ("user", "goal")  # one like per user per goal
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return f"{self.user} liked {self.goal.title}"
 
 
-class Comment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
-    goal = models.ForeignKey("Goal", on_delete=models.CASCADE, related_name="comments")
-    text = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        ordering = ["created_at"]  # oldest first
-
-    def __str__(self):
-        return f"{self.user} on {self.goal.title}: {self.text[:20]}"

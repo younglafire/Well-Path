@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Category, User, Goal ,Unit,Like,Comment
+from goals.models import User, Goal
+from social.models import Like, Comment
+from taxonomy.models import Category, Unit
 
 # Register your models here.
 admin.site.register(User)
