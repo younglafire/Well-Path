@@ -18,7 +18,7 @@ def category(request, category_slug):
 
     active_goals = [g for g in goals if g.status == 'active']
 
-    return render(request, "goals/category.html", {
+    return render(request, "taxonomy/category.html", {
         "goals": active_goals,
         "category": category,
         "categories": Category.objects.all(),
