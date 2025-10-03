@@ -3,7 +3,8 @@ from datetime import date
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.contrib.auth import get_user_model
-from .models import Category, Unit, Goal
+from .models import Goal
+from taxonomy.models import Category, Unit
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -41,6 +42,7 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class GoalForm(forms.ModelForm):
+    from taxonomy.models import Category, Unit
 
     title = forms.CharField(
         required=True,

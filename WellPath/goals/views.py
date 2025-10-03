@@ -1,19 +1,20 @@
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.timezone import now
 from datetime import timedelta
 from django.template.loader import render_to_string
-from django.views.decorators.http import require_POST
+from taxonomy.models import Category, Unit
+from social.models import Like, Comment
 
 # Add this context processor function
 def categories_context(request):
     return {'categories': Category.objects.all()}
 
 
-from .models import Category, Comment, Goal, Progress, ProgressPhoto,Unit,Like
+from .models import  Goal, Progress, ProgressPhoto
 from .forms import CustomUserCreationForm, GoalForm, GoalEditForm
 # Create your views here.
 
@@ -329,82 +330,7 @@ def goals_api(request):
     return JsonResponse({"html": html})
 
 
-@login_required
-@require_POST
-def like_goal(request, goal_id):
-    goal = get_object_or_404(Goal, pk=goal_id)
-
-    # check if user already liked
-    like_obj = Like.objects.filter(user=request.user, goal=goal).first()
-
-    if like_obj:
-        # unlike
-        like_obj.delete()
-        liked = False
-    else:
-        # like
-        Like.objects.create(user=request.user, goal=goal)
-        liked = True
-
-    # fresh count
-    likes_count = goal.likes_count
-
-    return JsonResponse({
-        "liked": liked,
-        "likes_count": likes_count
-    })
-
-@login_required
-def comment_goal(request, goal_id):
-    goal = get_object_or_404(Goal, id=goal_id)
-
-    if request.method == "POST":
-        import json
-        data = json.loads(request.body)
-        text = data.get("text", "").strip()
-        
-        if text:
-            comment = Comment.objects.create(user=request.user, goal=goal, text=text)
-            return JsonResponse({
-                "success": True,
-                "id": comment.id,
-                "user": comment.user.username,
-                "text": comment.text,
-                "created_at": comment.created_at.strftime("%Y-%m-%d %H:%M"),
-            })
-        else:
-            return JsonResponse({"error": "Comment text is required"}, status=400)
-
-    elif request.method == "GET":
-        # Get comments
-        comments = []
-        for comment in goal.comments.order_by("created_at"):
-            comments.append({
-                "id": comment.id,
-                "user": comment.user.username,
-                "text": comment.text,
-                "created_at": comment.created_at.isoformat(),
-            })
-        return JsonResponse(list(comments), safe=False)
-
-    return JsonResponse({"error": "Invalid request"}, status=400)
 
 
-def category(request, category_slug):
-    category = get_object_or_404(Category, slug=category_slug)
 
-    goals = Goal.objects.filter(
-        user=request.user
-    ).select_related(
-        "category","unit"
-    ).prefetch_related(
-        "progresses"
-    )
 
-    active_goals = [g for g in goals if g.status == 'active']
-
-    return render(request, "goals/category.html", {
-        "goals": active_goals,
-        "category": category,
-        "categories": Category.objects.all(),
-    })
