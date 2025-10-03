@@ -40,6 +40,7 @@ class Goal(models.Model):
         return None
 
     def get_current_value(self):
+        #Fix this, now it hits the DB every time.
         return sum(p.value for p in self.progresses.all())
 
     def has_today_progress(self, user):
