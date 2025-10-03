@@ -31,8 +31,9 @@ class Goal(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     finished_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
+    """Keeping those functions because they're not complex and require relations."""
     def days_remaining(self):
-        """Return number of days left until deadline (or None if no deadline)."""
+        # Return number of days left until deadline (or None if no deadline).
         if self.deadline:
             delta = self.deadline - now().date()
             return delta.days
