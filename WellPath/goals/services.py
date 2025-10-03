@@ -1,3 +1,8 @@
+"""
+Business logic for goals app.
+Following HackSoft Django Style Guide principles.
+"""
+
 from django.utils.timezone import now
 from django.db.models import QuerySet
 from datetime import timedelta, date
@@ -5,40 +10,55 @@ from typing import Dict, List, Optional, Tuple
 
 from .models import Goal, Progress, ProgressPhoto, User
 from taxonomy.models import Category
-"""
- ========================================================================
- GOAL STATUS & CALCULATIONS
- ========================================================================
-"""
+
+
+# =============================================================================
+# GOAL STATUS & CALCULATIONS
+# =============================================================================
+
 def goal_is_completed(goal: Goal) -> bool:
+    """
+    Check if a goal has reached its target value.
+    """
     return goal.get_current_value() >= goal.target_value
 
+
 def goal_is_overdue(goal: Goal) -> bool:
+    """
+    Check if a goal is past its deadline and not completed.
+    """
     if goal.deadline is None:
         return False
     return goal.deadline < now().date() and not goal_is_completed(goal)
 
+
 def goal_get_status(goal: Goal) -> str:
+    """
+    Return goal status: 'completed', 'overdue', or 'active'.
+    """
     if goal_is_completed(goal):
         return "completed"
     elif goal_is_overdue(goal):
         return "overdue"
     return "active"
 
-def goal_get_progress_percentage(goal: Goal) -> float:
+
+def goal_progress_percentage(goal: Goal) -> float:
+    """
+    Calculate progress as a percentage (0-100).
+    """
     total = goal.get_current_value()
     if goal.target_value == 0:
         return 0
     return min(100, (total / goal.target_value) * 100)
 
-"""
- ========================================================================
- PROGRESS MANAGEMENT
- ========================================================================
-"""
-# Reference to the add_progress view
+
+# =============================================================================
+# PROGRESS MANAGEMENT
+# =============================================================================
+
 def progress_create_or_update(
-    *,  # This forces keyword args
+    *,
     user: User,
     goal: Goal,
     value: float,
@@ -80,7 +100,7 @@ def progress_create_or_update(
     
     return progress, created
 
-# Reference to the add_progress view too
+
 def progress_check_goal_completion(goal: Goal) -> bool:
     """
     Check if goal just got completed and update finished_at timestamp.
@@ -92,8 +112,13 @@ def progress_check_goal_completion(goal: Goal) -> bool:
         return True
     return False
 
+
+# =============================================================================
+# GOAL QUERIES & FILTERING
+# =============================================================================
+
 def goal_list_for_user(
-    *,  # This forces keyword args
+    *,
     user: User,
     status_filter: Optional[str] = None
 ) -> List[Goal]:
@@ -130,7 +155,7 @@ def goal_list_for_user(
 
 def goal_list_public(*, status_filter: str = "active") -> List[Goal]:
     """
-    Get public goals for feed, filtered by status active only.
+    Get public goals for feed, filtered by status.
     """
     all_goals = Goal.objects.filter(
         is_public=True
@@ -147,11 +172,11 @@ def goal_list_public(*, status_filter: str = "active") -> List[Goal]:
     
     return goals_list
 
-"""
- ========================================================================
- DASHBOARD STATS
- ========================================================================
-"""
+
+# =============================================================================
+# DASHBOARD STATISTICS
+# =============================================================================
+
 def dashboard_get_category_stats(user: User) -> Dict[int, Dict]:
     """
     Calculate statistics for each category for a user's dashboard.
@@ -184,11 +209,12 @@ def dashboard_get_category_stats(user: User) -> Dict[int, Dict]:
         }
     
     return category_stats
-"""
- ========================================================================
- CHART DATA GENERATION
- ========================================================================
-"""
+
+
+# =============================================================================
+# CHART DATA GENERATION
+# =============================================================================
+
 def goal_get_chart_data(goal: Goal) -> Dict:
     """
     Generate chart data for goal detail page.
