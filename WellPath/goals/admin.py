@@ -10,14 +10,5 @@ admin.site.register(Like)
 admin.site.register(Comment)
 
 
-@admin.register(Unit)
-class UnitAdmin(admin.ModelAdmin):
-    list_display = ('name', 'order')
-    list_editable = ('order',)
-
-@admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('cat', 'order')
-    list_editable = ('order',)
 
 
