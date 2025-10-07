@@ -4,7 +4,7 @@ Following HackSoft Django Style Guide principles.
 """
 
 from django.utils.timezone import now
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Sum, Case, When, F, Q, Value, CharField, Count
 from datetime import timedelta, date
 from typing import Dict, List, Optional, Tuple
 
@@ -13,12 +13,13 @@ from taxonomy.models import Category
 
 
 # =============================================================================
-# GOAL STATUS & CALCULATIONS
+# GOAL STATUS & CALCULATIONS (for single goals - when you already have the goal object)
 # =============================================================================
 
 def goal_is_completed(goal: Goal) -> bool:
     """
     Check if a goal has reached its target value.
+    WARNING: This is for single goals. Use annotated queries for lists!
     """
     return goal.get_current_value() >= goal.target_value
 
@@ -26,6 +27,7 @@ def goal_is_completed(goal: Goal) -> bool:
 def goal_is_overdue(goal: Goal) -> bool:
     """
     Check if a goal is past its deadline and not completed.
+    WARNING: This is for single goals. Use annotated queries for lists!
     """
     if goal.deadline is None:
         return False
@@ -35,7 +37,18 @@ def goal_is_overdue(goal: Goal) -> bool:
 def goal_get_status(goal: Goal) -> str:
     """
     Return goal status: 'completed', 'overdue', or 'active'.
+    WARNING: This is for single goals. Use annotated queries for lists!
     """
+    # First check if the goal has annotated values (from queryset)
+    if hasattr(goal, 'current_value') and goal.current_value is not None:
+        # Use the annotated value (fast!)
+        if goal.current_value >= goal.target_value:
+            return "completed"
+        elif goal.deadline and goal.deadline < now().date():
+            return "overdue"
+        return "active"
+    
+    # Fallback to calculation (slow - only for single goals)
     if goal_is_completed(goal):
         return "completed"
     elif goal_is_overdue(goal):
@@ -46,8 +59,14 @@ def goal_get_status(goal: Goal) -> str:
 def goal_progress_percentage(goal: Goal) -> float:
     """
     Calculate progress as a percentage (0-100).
+    WARNING: This is for single goals. Use annotated queries for lists!
     """
-    total = goal.get_current_value()
+    # Check if we have annotated value first
+    if hasattr(goal, 'current_value') and goal.current_value is not None:
+        total = goal.current_value or 0
+    else:
+        total = goal.get_current_value()
+    
     if goal.target_value == 0:
         return 0
     return min(100, (total / goal.target_value) * 100)
@@ -114,7 +133,7 @@ def progress_check_goal_completion(goal: Goal) -> bool:
 
 
 # =============================================================================
-# GOAL QUERIES & FILTERING
+# GOAL QUERIES & FILTERING (OPTIMIZED WITH ANNOTATE)
 # =============================================================================
 
 def goal_list_for_user(
@@ -124,62 +143,92 @@ def goal_list_for_user(
 ) -> List[Goal]:
     """
     Get all goals for a user, optionally filtered by status.
+    Uses database aggregation for performance.
     
     Args:
         user: User to get goals for
         status_filter: Optional filter - 'active', 'completed', or 'overdue'
     
     Returns:
-        List of Goal objects
+        List of Goal objects with annotated current_value and status
     """
+    # ✅ Calculate current_value for ALL goals in ONE query
     goals = Goal.objects.filter(
         user=user
     ).select_related(
         'unit', 'category'
     ).prefetch_related(
         'progresses'
+    ).annotate(
+        # This calculates the sum in the database!
+        current_value=Sum('progresses__value'),
+        # This calculates status in the database!
+        status=Case(
+            When(current_value__gte=F('target_value'), then=Value('completed')),
+            When(
+                Q(deadline__lt=now().date()) & Q(current_value__lt=F('target_value')),
+                then=Value('overdue')
+            ),
+            default=Value('active'),
+            output_field=CharField()
+        )
     )
     
-    # Convert to list and filter by status if needed
-    goals_list = list(goals)
-    
+    # ✅ Filter in the database, not in Python!
     if status_filter == "completed":
-        return [g for g in goals_list if goal_get_status(g) == 'completed']
+        goals = goals.filter(status='completed')
     elif status_filter == "overdue":
-        return [g for g in goals_list if goal_get_status(g) == 'overdue']
+        goals = goals.filter(status='overdue')
     elif status_filter == "active":
-        return [g for g in goals_list if goal_get_status(g) == 'active']
+        goals = goals.filter(status='active')
     
-    return goals_list
+    return list(goals)
 
 
 def goal_list_public(*, status_filter: str = "active") -> List[Goal]:
     """
     Get public goals for feed, filtered by status.
+    Uses database aggregation for performance.
     """
-    all_goals = Goal.objects.filter(
+    # Calculate in database
+    goals = Goal.objects.filter(
         is_public=True
     ).select_related(
         'user', 'category', 'unit',
     ).prefetch_related(
         'likes', 'comments', 'progresses'
+    ).annotate(
+        current_value=Sum('progresses__value'),
+        status=Case(
+            When(current_value__gte=F('target_value'), then=Value('completed')),
+            When(
+                Q(deadline__lt=now().date()) & Q(current_value__lt=F('target_value')),
+                then=Value('overdue')
+            ),
+            default=Value('active'),
+            output_field=CharField()
+        )
     )
     
-    goals_list = list(all_goals)
-    
+    # Filter in database
     if status_filter == "active":
-        return [g for g in goals_list if goal_get_status(g) == 'active']
+        goals = goals.filter(status='active')
+    elif status_filter == "completed":
+        goals = goals.filter(status='completed')
+    elif status_filter == "overdue":
+        goals = goals.filter(status='overdue')
     
-    return goals_list
+    return list(goals)
 
 
 # =============================================================================
-# DASHBOARD STATISTICS
+# DASHBOARD STATISTICS (OPTIMIZED)
 # =============================================================================
 
 def dashboard_get_category_stats(user: User) -> Dict[int, Dict]:
     """
     Calculate statistics for each category for a user's dashboard.
+    Uses database aggregation - NO Python loops!
     
     Returns:
         Dict mapping category_id to stats dict with keys:
@@ -188,24 +237,36 @@ def dashboard_get_category_stats(user: User) -> Dict[int, Dict]:
         - completed: count of completed goals
         - total: total goals in category
     """
-    goals = list(Goal.objects.filter(
-        user=user
-    ).select_related(
-        'unit', 'category'
-    ).prefetch_related(
-        'progresses'
-    ))
+    # Calculate everything in the database!
+    categories = Category.objects.annotate(
+        # Count total goals for this user in this category
+        total_goals=Count(
+            'goals',
+            filter=Q(goals__user=user),
+            distinct=True
+        ),
+        # Count completed goals (finished_at is set)
+        completed_goals=Count(
+            'goals',
+            filter=Q(goals__user=user, goals__finished_at__isnull=False),
+            distinct=True
+        ),
+        # Count active goals (finished_at is null)
+        active_goals=Count(
+            'goals',
+            filter=Q(goals__user=user, goals__finished_at__isnull=True),
+            distinct=True
+        )
+    )
     
-    categories = Category.objects.all()
+    # Convert to dict format
     category_stats = {}
-    
     for category in categories:
-        user_goals = [g for g in goals if g.category == category]
         category_stats[category.id] = {
             'category': category,
-            'active': len([g for g in user_goals if goal_get_status(g) == 'active']),
-            'completed': len([g for g in user_goals if goal_get_status(g) == 'completed']),
-            'total': len(user_goals)
+            'active': category.active_goals,
+            'completed': category.completed_goals,
+            'total': category.total_goals
         }
     
     return category_stats
@@ -219,6 +280,8 @@ def goal_get_chart_data(goal: Goal) -> Dict:
     """
     Generate chart data for goal detail page.
     Includes date range, values, cumulative progress, and averages.
+    
+    This is for a SINGLE goal, so it's OK to use get_current_value().
     """
     progress_history = goal.progresses.order_by("date")
     
@@ -256,7 +319,7 @@ def goal_get_chart_data(goal: Goal) -> Dict:
             values.append(None)
             cumulative.append(None)
     
-    # Calculate averages
+    # Calculate averages (using get_current_value is OK here - single goal)
     last_date = min(today, end_date)
     days_passed = (last_date - start_date).days + 1 if last_date >= start_date else 1
     
