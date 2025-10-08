@@ -81,6 +81,7 @@
     <!-- Post Actions -->
     <div class="social-post-actions">
         {% if user.is_authenticated %}
+        {% csrf_token %}
             <button class="action-btn like-btn {% if goal.is_liked %}liked{% endif %}" 
                     data-goal-id="{{ goal.id }}" 
                     data-like-url="{% url 'like_goal' goal.id %}">

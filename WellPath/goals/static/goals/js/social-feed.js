@@ -1,6 +1,6 @@
 /**
  * Social Feed JavaScript
- * Handles likes, comments, and social interactions
+ * Handles likes, and social interactions
  */
 
 class SocialFeed {
@@ -10,8 +10,6 @@ class SocialFeed {
 
   init() {
     this.setupLikeButtons();
-    this.setupCommentButtons();
-    this.setupCommentForms();
   }
 
   // Setup like button functionality
@@ -43,8 +41,9 @@ class SocialFeed {
         headers: {
           'X-CSRFToken': this.getCsrfToken(),
           'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'  // Add this to identify AJAX requests
         },
-        credentials: 'same-origin'
+        credentials: 'include'  // Changed from same-origin to include
       });
 
       const data = await response.json();
@@ -75,8 +74,15 @@ class SocialFeed {
  
   // Utility functions
   getCsrfToken() {
-    const token = document.querySelector('[name=csrfmiddlewaretoken]');
-    return token ? token.value : '';
+    // First try to get from csrf_token input
+    const tokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (tokenInput) return tokenInput.value;
+    
+    // Then try to get from meta tag
+    const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+    if (tokenMeta) return tokenMeta.content;
+    
+    return '';
   }
 
   formatTime(dateString) {
