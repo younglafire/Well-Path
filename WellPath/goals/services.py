@@ -163,7 +163,7 @@ def goal_list_for_user(
         # This calculates the sum in the database!
         current_value=Sum('progresses__value'),
         # This calculates status in the database!
-        status=Case(
+        db_status=Case(
             When(current_value__gte=F('target_value'), then=Value('completed')),
             When(
                 Q(deadline__lt=now().date()) & Q(current_value__lt=F('target_value')),
@@ -176,11 +176,11 @@ def goal_list_for_user(
     
     # ✅ Filter in the database, not in Python!
     if status_filter == "completed":
-        goals = goals.filter(status='completed')
+        goals = goals.filter(db_status='completed')
     elif status_filter == "overdue":
-        goals = goals.filter(status='overdue')
+        goals = goals.filter(db_status='overdue')
     elif status_filter == "active":
-        goals = goals.filter(status='active')
+        goals = goals.filter(db_status='active')
     
     return list(goals)
 
@@ -196,10 +196,10 @@ def goal_list_public(*, status_filter: str = "active") -> List[Goal]:
     ).select_related(
         'user', 'category', 'unit',
     ).prefetch_related(
-        'likes', 'comments', 'progresses'
+        'likes', 'progresses'
     ).annotate(
         current_value=Sum('progresses__value'),
-        status=Case(
+        db_status=Case(
             When(current_value__gte=F('target_value'), then=Value('completed')),
             When(
                 Q(deadline__lt=now().date()) & Q(current_value__lt=F('target_value')),
@@ -212,11 +212,11 @@ def goal_list_public(*, status_filter: str = "active") -> List[Goal]:
     
     # Filter in database
     if status_filter == "active":
-        goals = goals.filter(status='active')
+        goals = goals.filter(db_status='active')
     elif status_filter == "completed":
-        goals = goals.filter(status='completed')
+        goals = goals.filter(db_status='completed')
     elif status_filter == "overdue":
-        goals = goals.filter(status='overdue')
+        goals = goals.filter(db_status='overdue')
     
     return list(goals)
 

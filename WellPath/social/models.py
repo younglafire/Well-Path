@@ -15,15 +15,3 @@ class Like(models.Model):
     def __str__(self):
         return f"{self.user} liked {self.goal.title}"
     
-class Comment(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="comments")
-    goal = models.ForeignKey("goals.Goal", on_delete=models.CASCADE, related_name="comments")
-    text = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["created_at"]  # oldest first
-        app_label = "social"
-
-    def __str__(self):
-        return f"{self.user} on {self.goal.title}: {self.text[:20]}"
