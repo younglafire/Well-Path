@@ -311,7 +311,6 @@ graph LR
 ### Future Enhancements 🚀
 - [ ] Goal categories and tags
 - [ ] Comment system
-- [ ] Data visualization (charts and graphs for progress)
 - [ ] Achievement badges and milestones
 - [ ] User profiles with statistics
 - [ ] Follow/friend system
@@ -325,6 +324,10 @@ See the [open issues](https://github.com/younglafire/cs50w_final/issues) for a f
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+
+## Known Issues 
+- No current value
+- The chart won't work without value, and the logic of it is off
 <!-- DEVELOPMENT PROCESS -->
 ## Development Process
 
