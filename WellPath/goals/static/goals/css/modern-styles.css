@@ -154,6 +154,9 @@ p {
   color: var(--primary-600) !important;
   background-color: var(--primary-100);
 }
+.nav-link .btn-primary-modern {
+  color: white !important; /* Ensure the icon color is white */
+}
 
 /* ===== BUTTONS ===== */
 
@@ -171,18 +174,24 @@ p {
 }
 
 .btn-primary-modern {
-  background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
-  color: white;
-  box-shadow: var(--shadow-sm);
+    background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+    color: white !important; /* Ensure all text inside is white */
+    box-shadow: var(--shadow-sm);
+    text-decoration: none;
 }
 
 .btn-primary-modern:hover {
-  background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
-  color: white;
+    background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+    color: white; /* Reinforce white text on hover */
 }
 
+.btn-primary-modern i,
+.btn-primary-modern span,
+.btn-primary-modern a { /* Target the anchor text directly if needed */
+    color: white !important; /* Ensure icons, spans, and text are white */
+}
 .btn-secondary-modern {
   background-color: var(--neutral-100);
   color: var(--neutral-700);
