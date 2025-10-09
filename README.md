@@ -122,7 +122,7 @@ This project showcases my ability to:
 
 🌐 **Social Features**
 - Public goals feed to share your journey
-- Comment system for community support and motivation
+- Like system only
 - Connect with others pursuing similar goals
 
 🚀 **Production-Ready**
@@ -194,7 +194,7 @@ Make sure you have the following installed:
 2. **Set Your First Goal**: Define what you want to achieve (e.g., "Run 5km three times a week")
 3. **Track Progress**: Update your progress as you work toward your goal
 4. **Share Your Journey**: Make goals public to inspire others and receive support
-5. **Engage with the Community**: Comment on other users' goals and celebrate their achievements
+5. **Engage with the Community**: Like other users' goals 
 
 **Example Use Cases:**
 - Track fitness milestones (running distance, workout frequency)
@@ -207,39 +207,92 @@ Make sure you have the following installed:
 <!-- DFDS -->
 ## DFDs
 
-*Data Flow Diagrams will be added here to illustrate the system architecture and data flow through the application.*
 
 <!-- Context Diagram -->
-### Context Diagram
-*[Image placeholder - Shows high-level system interactions between users, the Well Path application, and the database]*
+### Context Diagram For All Apps
 
-<!-- Level 1 DFD -->
-### Level 1 DFD
-*[Image placeholder - Shows major processes: User Management, Goal Management, Progress Tracking, and Social Features]*
-
-<!-- Level 2 DFD -->
-### Level 2 DFD
-*[Image placeholder - Detailed breakdown of Goal Management process showing CRUD operations and data flows]*
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<img width="663" height="933" alt="Image" src="https://github.com/user-attachments/assets/897453b1-607a-4853-85eb-5fe21c915c05" />
 
 <!-- WEBSITE FLOW -->
+
 ## Website Flow
 
-*Website flow diagrams will be added here to demonstrate user journeys and navigation paths through the application.*
+https://github.com/user-attachments/assets/a0ffd798-5d1c-4a90-982a-afdb17e3ab10
 
 ### User Registration & Authentication Flow
-*[Image placeholder - Shows the flow from landing page → registration → login → dashboard]*
-
+```mermaid
+graph LR
+    A[Start] --> B[Landing Page]
+    B --> C[Register Form]
+    B --> D[Login Form]
+    C --> F[Login]
+    D --> G[Dashboard]
+    F --> G
+    
+    style A fill:#e1f5ff
+    style B fill:#fff4e1
+    style G fill:#e8f5e9
+    style A fill:#e1f5ff
+    style B fill:#fff4e1
+    style G fill:#e8f5e9
+```
 ### Goal Creation & Management Flow
-*[Image placeholder - Shows the flow from dashboard → create goal → view goal → edit/update → track progress]*
-
+```mermaid
+graph LR
+    A[Dashboard] --> B[Click New Goal]
+    B --> C[Fill Form]
+    C --> D[Submit]
+    D --> E[Goal Detail Page]
+    E --> F[Back to Dashboard]
+    
+    style A fill:#e3f2fd
+    style E fill:#f3e5f5
+    style F fill:#e8f5e9
+```
 ### Social Interaction Flow
-*[Image placeholder - Shows the flow from feed → view public goals → comment → like/interact]*
+```mermaid
+graph LR
+    A[Dashboard] --> B[Navigate to Feed]
+    B --> C[View Public Goals]
+    C --> D[Like Goal]
+    D --> E[Click Goal]
+    E --> F[Read Details]
 
-### Complete User Journey
-*[Image placeholder - Shows end-to-end user experience from first visit to achieving and sharing goals]*
+    
+    style A fill:#e3f2fd
+    style C fill:#fff3e0
+    style E fill:#e8f5e9
+```
 
+### 🎨 System State Diagram
+
+```
+                    ┌──────────────┐
+                    │  Anonymous   │
+                    │    User      │
+                    └──────┬───────┘
+                           │
+                    ┌──────▼───────┐
+                    │   Register/  │
+                    │    Login     │
+                    └──────┬───────┘
+                           │
+                    ┌──────▼───────┐
+              ┌─────┤ Authenticated├─────┐
+              │     │     User     │     │
+              │     └──────────────┘     │
+              │                          │
+       ┌──────▼──────┐          ┌───────▼────────┐
+       │   Personal  │          │     Social     │
+       │    Goals    │          │     Feed       │
+       └──────┬──────┘          └───────┬────────┘
+              │                          │
+    ┌─────────┼─────────┐               │
+    ▼         ▼         ▼               ▼
+┌────────┐ ┌──────┐ ┌──────┐    ┌────────────┐
+│ Create │ │ Edit │ │Delete│    │  Comment   │
+└────────┘ └──────┘ └──────┘    └────────────┘
+```
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->
@@ -252,12 +305,12 @@ Make sure you have the following installed:
 - [x] Goal sorting and filtering
 - [x] Detailed goal pages
 - [x] Public goals feed
-- [x] Comment system
 - [x] Responsive design
 - [x] Database models and relationships
 
 ### Future Enhancements 🚀
 - [ ] Goal categories and tags
+- [ ] Comment system
 - [ ] Data visualization (charts and graphs for progress)
 - [ ] Achievement badges and milestones
 - [ ] User profiles with statistics
@@ -289,7 +342,6 @@ Well Path was built following a structured, phase-based approach:
 
 ### Phase 3: Social Features
 - Created public goals feed
-- Implemented commenting system
 - Added user interaction capabilities
 
 ### Phase 4: Polish & Deployment
