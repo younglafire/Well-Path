@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'goals',
     'social',
     'taxonomy',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -129,3 +130,9 @@ AUTH_USER_MODEL = "goals.User"
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Django extensions
+GRAPH_MODELS = {
+  'app_labels': ["goals", "social", "taxonomy"],
+  'group_models': True,
+}
