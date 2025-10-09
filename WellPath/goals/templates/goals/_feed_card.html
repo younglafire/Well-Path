@@ -81,6 +81,7 @@
     <!-- Post Actions -->
     <div class="social-post-actions">
         {% if user.is_authenticated %}
+        {% csrf_token %}
             <button class="action-btn like-btn {% if goal.is_liked %}liked{% endif %}" 
                     data-goal-id="{{ goal.id }}" 
                     data-like-url="{% url 'like_goal' goal.id %}">
@@ -94,37 +95,6 @@
                 <span class="like-count">{{ goal.likes_count }}</span>
                 <span class="action-text">Like</span>
             </a>
-        {% endif %}
-    </div>
-    
-        
-    <!-- Comments Section -->
-    <div class="comments-section" id="comments-{{ goal.id }}" style="display: none;">
-        <div class="comments-list" data-loaded="false">
-            <!-- Comments will be loaded here via AJAX -->
-        </div>
-        
-        {% if user.is_authenticated %}
-        <div class="comment-form-container">
-            <form class="comment-form" data-goal-id="{{ goal.id }}" data-comments-url="{% url 'comment_goal' goal.id %}">
-                {% csrf_token %}
-                <div class="d-flex gap-2">
-                    <div class="comment-avatar">
-                        <i data-lucide="user" style="width: 16px; height: 16px;"></i>
-                    </div>
-                    <input type="text" class="comment-input" placeholder="Write a comment..." required>
-                    <button type="submit" class="btn btn-primary-modern btn-sm">
-                        <i data-lucide="send" style="width: 14px; height: 14px;"></i>
-                    </button>
-                </div>
-            </form>
-        </div>
-        {% else %}
-        <div class="text-center py-3">
-            <a href="{% url 'login' %}" class="text-muted text-decoration-none">
-                <i data-lucide="log-in" class="me-1"></i>Login to comment
-            </a>
-        </div>
         {% endif %}
     </div>
 </div>

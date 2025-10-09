@@ -1,6 +1,6 @@
 /**
  * Social Feed JavaScript
- * Handles likes, comments, and social interactions
+ * Handles likes, and social interactions
  */
 
 class SocialFeed {
@@ -10,8 +10,6 @@ class SocialFeed {
 
   init() {
     this.setupLikeButtons();
-    this.setupCommentButtons();
-    this.setupCommentForms();
   }
 
   // Setup like button functionality
@@ -24,25 +22,7 @@ class SocialFeed {
     });
   }
 
-  // Setup comment toggle functionality
-  setupCommentButtons() {
-    document.querySelectorAll('.comment-btn').forEach(button => {
-      button.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.toggleComments(button);
-      });
-    });
-  }
 
-  // Setup comment form submission
-  setupCommentForms() {
-    document.querySelectorAll('.comment-form').forEach(form => {
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        this.handleCommentSubmit(form);
-      });
-    });
-  }
 
   // Handle like button click
   async handleLike(button) {
@@ -61,8 +41,9 @@ class SocialFeed {
         headers: {
           'X-CSRFToken': this.getCsrfToken(),
           'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'  // Add this to identify AJAX requests
         },
-        credentials: 'same-origin'
+        credentials: 'include'  // Changed from same-origin to include
       });
 
       const data = await response.json();
@@ -89,175 +70,19 @@ class SocialFeed {
     }
   }
 
-  // Toggle comments section
-  async toggleComments(button) {
-    const goalId = button.dataset.goalId;
-    const commentsUrl = button.dataset.commentsUrl;
-    const commentsSection = document.getElementById(`comments-${goalId}`);
-    const commentsList = commentsSection.querySelector('.comments-list');
 
-    if (commentsSection.style.display === 'none' || !commentsSection.style.display) {
-      // Show comments
-      commentsSection.style.display = 'block';
-      commentsSection.classList.add('slide-down');
-
-      // Load comments if not already loaded
-      if (!commentsList.dataset.loaded) {
-        await this.loadComments(goalId, commentsUrl, commentsList);
-      }
-    } else {
-      // Hide comments
-      commentsSection.style.display = 'none';
-      commentsSection.classList.remove('slide-down');
-    }
-  }
-
-  // Load comments via AJAX
-  async loadComments(goalId, commentsUrl, commentsList) {
-    try {
-      commentsList.innerHTML = '<div class="loading-comments"><div class="spinner"></div> Loading comments...</div>';
-      
-      const response = await fetch(commentsUrl, {
-        credentials: 'same-origin'
-      });
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        this.renderComments(data, commentsList);
-        commentsList.dataset.loaded = 'true';
-      } else {
-        commentsList.innerHTML = '<div class="text-muted text-center py-3">Failed to load comments</div>';
-      }
-    } catch (error) {
-      commentsList.innerHTML = '<div class="text-muted text-center py-3">Error loading comments</div>';
-    }
-  }
-
-  // Render comments in the UI
-  renderComments(comments, container) {
-    if (comments.length === 0) {
-      container.innerHTML = '<div class="text-muted text-center py-3">No comments yet. Be the first to comment!</div>';
-      return;
-    }
-
-    const commentsHtml = comments.map(comment => `
-      <div class="comment-item">
-        <div class="comment-avatar">
-          <i data-lucide="user" style="width: 14px; height: 14px;"></i>
-        </div>
-        <div class="comment-content">
-          <div class="comment-header">
-            <span class="comment-username">${comment.user}</span>
-            <span class="comment-time">${this.formatTime(comment.created_at)}</span>
-          </div>
-          <div class="comment-text">${comment.text}</div>
-        </div>
-      </div>
-    `).join('');
-
-    container.innerHTML = commentsHtml;
-    
-    // Re-initialize Lucide icons for new content
-    if (typeof lucide !== 'undefined') {
-      lucide.createIcons();
-    }
-  }
-
-  // Handle comment form submission
-  async handleCommentSubmit(form) {
-    const goalId = form.dataset.goalId;
-    const commentsUrl = form.dataset.commentsUrl;
-    const input = form.querySelector('.comment-input');
-    const commentText = input.value.trim();
-
-    if (!commentText) return;
-
-    // Disable form during submission
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalBtnContent = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<div class="spinner"></div>';
-    submitBtn.disabled = true;
-    input.disabled = true;
-
-    try {
-      const response = await fetch(commentsUrl, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': this.getCsrfToken(),
-          'Content-Type': 'application/json',
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify({ text: commentText })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Add new comment to the list
-        const commentsList = form.closest('.comments-section').querySelector('.comments-list');
-        this.addNewComment(data, commentsList);
-        
-        // Update comment count
-        const commentBtn = document.querySelector(`[data-goal-id="${goalId}"].comment-btn`);
-        const commentCount = commentBtn.querySelector('.comment-count');
-        commentCount.textContent = parseInt(commentCount.textContent) + 1;
-        
-        // Clear form
-        input.value = '';
-      } else {
-        this.showError('Failed to post comment');
-      }
-    } catch (error) {
-      this.showError('Network error');
-    } finally {
-      // Re-enable form
-      submitBtn.innerHTML = originalBtnContent;
-      submitBtn.disabled = false;
-      input.disabled = false;
-    }
-  }
-
-  // Add new comment to the comments list
-  addNewComment(comment, commentsList) {
-    const newCommentHtml = `
-      <div class="comment-item new-comment">
-        <div class="comment-avatar">
-          <i data-lucide="user" style="width: 14px; height: 14px;"></i>
-        </div>
-        <div class="comment-content">
-          <div class="comment-header">
-            <span class="comment-username">${comment.user}</span>
-            <span class="comment-time">just now</span>
-          </div>
-          <div class="comment-text">${comment.text}</div>
-        </div>
-      </div>
-    `;
-
-    if (commentsList.innerHTML.includes('No comments yet')) {
-      commentsList.innerHTML = newCommentHtml;
-    } else {
-      commentsList.insertAdjacentHTML('beforeend', newCommentHtml);
-    }
-
-    // Re-initialize icons for new content
-    lucide.createIcons();
-    
-    // Scroll to new comment
-    const newComment = commentsList.querySelector('.new-comment');
-    newComment.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    
-    // Remove new-comment class after animation
-    setTimeout(() => {
-      newComment.classList.remove('new-comment');
-    }, 1000);
-  }
-
+ 
   // Utility functions
   getCsrfToken() {
-    const token = document.querySelector('[name=csrfmiddlewaretoken]');
-    return token ? token.value : '';
+    // First try to get from csrf_token input
+    const tokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (tokenInput) return tokenInput.value;
+    
+    // Then try to get from meta tag
+    const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+    if (tokenMeta) return tokenMeta.content;
+    
+    return '';
   }
 
   formatTime(dateString) {
