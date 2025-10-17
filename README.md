@@ -45,6 +45,7 @@
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
+    <li><a href="#testing">Testing</a></li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#dfds">DFDs</a></li>
     <li><a href="#website-flow">Website Flow</a></li>
@@ -126,7 +127,7 @@ This project showcases my ability to:
 - Connect with others pursuing similar goals
 
 🚀 **Production-Ready**
-- Thoroughly tested and polished
+- Thoroughly tested with 66 comprehensive unit tests
 - Deployment-ready architecture
 - Scalable database design
 
@@ -182,6 +183,95 @@ Make sure you have the following installed:
    ```
    http://127.0.0.1:8000/
    ```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- TESTING -->
+## Testing
+
+Well Path includes a comprehensive test suite to ensure code quality and reliability. Tests cover models, views, services, and forms across all applications.
+
+### Running Tests
+
+**Run all tests:**
+```sh
+# Navigate to the WellPath subdirectory (where manage.py is located)
+cd WellPath
+python manage.py test
+```
+
+**Run tests for a specific app:**
+```sh
+python manage.py test goals      # Test the goals app
+python manage.py test social     # Test the social app
+python manage.py test taxonomy   # Test the taxonomy app
+```
+
+**Run tests with verbose output:**
+```sh
+python manage.py test --verbosity=2
+```
+
+**Run a specific test class or method:**
+```sh
+python manage.py test goals.tests.GoalModelTest
+python manage.py test goals.tests.GoalModelTest.test_goal_creation
+```
+
+### Test Coverage
+
+The project includes **66 comprehensive tests** covering:
+
+📋 **Goals App (40 tests)**
+- User model and authentication
+- Goal model with status calculations
+- Progress tracking with daily constraints
+- Progress photos with file uploads
+- Business logic in service layer
+- User registration and goal forms
+
+👥 **Social App (11 tests)**
+- Like model with unique constraints
+- Like/unlike toggle functionality
+- AJAX endpoints for social features
+
+🏷️ **Taxonomy App (15 tests)**
+- Category model with slug generation
+- Unit model and ordering
+- Category filtering views
+- AJAX unit loading endpoint
+
+### Understanding the Tests
+
+Each test file includes detailed comments explaining:
+- **What** is being tested
+- **Why** it's important
+- **How** the test works
+
+This makes the tests a great learning resource for understanding Django development patterns!
+
+### Example Test Structure
+
+```python
+def test_goal_creation(self):
+    """
+    Test that a goal is created successfully with all fields.
+    
+    This checks:
+    - The goal exists in the database
+    - All fields are stored correctly
+    """
+    self.assertEqual(self.goal.title, "Run 100km")
+    self.assertTrue(self.goal.is_public)
+```
+
+### Writing New Tests
+
+When adding new features:
+1. Write tests first (Test-Driven Development)
+2. Run tests to see them fail
+3. Implement the feature
+4. Run tests to see them pass
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -307,6 +397,7 @@ graph LR
 - [x] Public goals feed
 - [x] Responsive design
 - [x] Database models and relationships
+- [x] Comprehensive test suite (66 tests covering all apps)
 
 ### Future Enhancements 🚀
 - [ ] Goal categories and tags
