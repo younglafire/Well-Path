@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -66,6 +67,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'goals.views.categories_context',
+                'WellPath.context_processors.feature_flags',
             ],
         },
     },
@@ -135,4 +137,19 @@ MEDIA_ROOT = BASE_DIR / 'media'
 GRAPH_MODELS = {
   'app_labels': ["goals", "social", "taxonomy"],
   'group_models': True,
+}
+
+# -----------------------------------------------------------------------------
+# Feature Flags
+# -----------------------------------------------------------------------------
+# Expose feature flags in a single place; values can be overridden via env vars.
+def _env_bool(name: str, default: bool) -> bool:
+    val = os.getenv(name)
+    if val is None:
+        return default
+    return val.strip().lower() in {"1", "true", "yes", "on"}
+
+FEATURE_FLAGS = {
+    # Enable GPT-5 for all clients (toggleable via env var)
+    "ENABLE_GPT5_FOR_ALL_CLIENTS": _env_bool("ENABLE_GPT5_FOR_ALL_CLIENTS", True),
 }
