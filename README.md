@@ -195,6 +195,7 @@ Well Path includes a comprehensive test suite to ensure code quality and reliabi
 
 **Run all tests:**
 ```sh
+# Navigate to the WellPath subdirectory (where manage.py is located)
 cd WellPath
 python manage.py test
 ```

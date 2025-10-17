@@ -65,6 +65,7 @@ Organization system for goals (categories and units).
 
 ### Run All Tests
 ```bash
+# Navigate to the WellPath subdirectory (where manage.py is located)
 cd WellPath
 python manage.py test
 ```
@@ -280,9 +281,11 @@ python manage.py test goals.tests.GoalModelTest.test_goal_creation --verbosity=2
 ## 📚 Further Learning
 
 ### Django Testing Documentation
-- [Django Testing Overview](https://docs.djangoproject.com/en/stable/topics/testing/)
-- [Testing Tools](https://docs.djangoproject.com/en/stable/topics/testing/tools/)
-- [Advanced Testing Topics](https://docs.djangoproject.com/en/stable/topics/testing/advanced/)
+- [Django Testing Overview](https://docs.djangoproject.com/en/5.0/topics/testing/)
+- [Testing Tools](https://docs.djangoproject.com/en/5.0/topics/testing/tools/)
+- [Advanced Testing Topics](https://docs.djangoproject.com/en/5.0/topics/testing/advanced/)
+
+> **Note:** These links use Django 5.0. If you're using a different version, replace "5.0" in the URL with your Django version (e.g., "4.2").
 
 ### Testing Best Practices
 - Write tests for new features before implementing them (TDD)
