@@ -44,7 +44,7 @@
                     <div class="row mb-4">
                         <div class="col-md-3">
                             <div class="goal-stat">
-                                <span class="goal-stat-value">{{ total_progress|floatformat:1 }}</span>
+                                <span class="goal-stat-value">{{ goal.get_current_value|floatformat:1 }}</span>
                                 <span class="goal-stat-label">Current</span>
                             </div>
                         </div>
@@ -72,14 +72,14 @@
                     <div class="mb-3">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="fw-medium">Overall Progress</span>
-                            <span class="text-muted">{{ progress_percent|floatformat:0 }}%</span>
+                            <span class="text-muted">{{ goal.progress_percentage|floatformat:0 }}%</span>
                         </div>
                         <div class="modern-progress">
                             <div class="modern-progress-bar"
-                                 style="width: {% if progress_percent > 0 %}{{ progress_percent|floatformat:0 }}{% else %}2{% endif %}%;"></div>
+                                 style="width: {% if goal.progress_percentage > 0 %}{{ goal.progress_percentage|floatformat:0 }}{% else %}2{% endif %}%;"></div>
                         </div>
                         <div class="d-flex justify-content-between text-sm text-muted mt-1">
-                            <span>{{ total_progress|floatformat:1 }} {{ goal.unit.name }}</span>
+                            <span>{{ goal.get_current_value|floatformat:1 }} {{ goal.unit.name }}</span>
                             <span>{{ goal.target_value }} {{ goal.unit.name }}</span>
                         </div>
                     </div>
