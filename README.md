@@ -16,14 +16,14 @@
   <p>
     Set goals. Track progress. Share your journey.
     <br />
-    <a href="https://github.com/younglafire/cs50w_final"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/younglafire/Well-Path"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/younglafire/cs50w_final">View Demo</a>
+    <a href="https://github.com/younglafire/Well-Path">View Demo</a>
     ·
-    <a href="https://github.com/younglafire/cs50w_final/issues">Report Bug</a>
+    <a href="https://github.com/younglafire/Well-Path/issues">Report Bug</a>
     ·
-    <a href="https://github.com/younglafire/cs50w_final/issues">Request Feature</a>
+    <a href="https://github.com/younglafire/Well-Path/issues">Request Feature</a>
   </p>
 </div>
 
@@ -148,8 +148,8 @@ Make sure you have the following installed:
 
 1. **Clone the repository**
    ```sh
-   git clone https://github.com/younglafire/cs50w_final.git
-   cd cs50w_final
+   git clone https://github.com/younglafire/Well-Path.git
+   cd Well-Path
    ```
 
 2. **Create a virtual environment (recommended)**
@@ -320,7 +320,7 @@ graph LR
 - [ ] Goal templates and recommendations
 - [ ] Export progress reports
 
-See the [open issues](https://github.com/younglafire/cs50w_final/issues) for a full list of proposed features and known issues.
+See the [open issues](https://github.com/younglafire/Well-Path/issues) for a full list of proposed features and known issues.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -369,7 +369,7 @@ Well Path was built following a structured, phase-based approach:
 - LinkedIn: [Your LinkedIn](https://linkedin.com/in/your-linkedin-username)
 - Email: your.email@example.com
 
-**Project Link**: [https://github.com/younglafire/cs50w_final](https://github.com/younglafire/cs50w_final)
+**Project Link**: [https://github.com/younglafire/Well-Path](https://github.com/younglafire/Well-Path)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -389,15 +389,15 @@ Well Path was built following a structured, phase-based approach:
 </p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
-[contributors-shield]: https://img.shields.io/github/contributors/younglafire/cs50w_final.svg?style=for-the-badge
-[contributors-url]: https://github.com/younglafire/cs50w_final/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/younglafire/cs50w_final.svg?style=for-the-badge
-[forks-url]: https://github.com/younglafire/cs50w_final/network/members
-[stars-shield]: https://img.shields.io/github/stars/younglafire/cs50w_final.svg?style=for-the-badge
-[stars-url]: https://github.com/younglafire/cs50w_final/stargazers
-[issues-shield]: https://img.shields.io/github/issues/younglafire/cs50w_final.svg?style=for-the-badge
-[issues-url]: https://github.com/younglafire/cs50w_final/issues
-[license-shield]: https://img.shields.io/github/license/younglafire/cs50w_final.svg?style=for-the-badge
-[license-url]: https://github.com/younglafire/cs50w_final/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/younglafire/Well-Path.svg?style=for-the-badge
+[contributors-url]: https://github.com/younglafire/Well-Path/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/younglafire/Well-Path.svg?style=for-the-badge
+[forks-url]: https://github.com/younglafire/Well-Path/network/members
+[stars-shield]: https://img.shields.io/github/stars/younglafire/Well-Path.svg?style=for-the-badge
+[stars-url]: https://github.com/younglafire/Well-Path/stargazers
+[issues-shield]: https://img.shields.io/github/issues/younglafire/Well-Path.svg?style=for-the-badge
+[issues-url]: https://github.com/younglafire/Well-Path/issues
+[license-shield]: https://img.shields.io/github/license/younglafire/Well-Path.svg?style=for-the-badge
+[license-url]: https://github.com/younglafire/Well-Path/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/your-linkedin-username
