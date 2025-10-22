@@ -838,3 +838,195 @@ class GoalEditFormTest(TestCase):
         # These fields should be disabled
         self.assertTrue(form.fields['category'].disabled)
         self.assertTrue(form.fields['unit'].disabled)
+
+
+# =============================================================================
+# NEW TESTS FOR CHART GROUPING AND DEADLINE VALIDATION
+# =============================================================================
+
+class GoalFormDeadlineValidationTest(TestCase):
+    """
+    Test the deadline validation in GoalForm.
+    """
+    
+    def setUp(self):
+        """Set up test data."""
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.category = Category.objects.create(cat="Test Category", slug="test")
+        self.unit = Unit.objects.create(name="km", order=1)
+        self.unit.categories.add(self.category)
+    
+    def test_deadline_too_far_in_future(self):
+        """Test that deadline more than 2 years in future is invalid."""
+        form_data = {
+            'title': 'Test Goal',
+            'description': 'Test Description',
+            'category': self.category.id,
+            'unit': self.unit.id,
+            'target_value': 100,
+            'deadline': date.today() + timedelta(days=731),  # More than 2 years
+            'is_public': True
+        }
+        form = GoalForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('deadline', form.errors)
+    
+    def test_deadline_exactly_two_years(self):
+        """Test that deadline exactly 2 years in future is valid."""
+        form_data = {
+            'title': 'Test Goal',
+            'description': 'Test Description',
+            'category': self.category.id,
+            'unit': self.unit.id,
+            'target_value': 100,
+            'deadline': date.today() + timedelta(days=730),  # Exactly 2 years
+            'is_public': True
+        }
+        form = GoalForm(data=form_data)
+        self.assertTrue(form.is_valid())
+    
+    def test_deadline_in_past(self):
+        """Test that deadline in the past is invalid."""
+        form_data = {
+            'title': 'Test Goal',
+            'description': 'Test Description',
+            'category': self.category.id,
+            'unit': self.unit.id,
+            'target_value': 100,
+            'deadline': date.today() - timedelta(days=1),
+            'is_public': True
+        }
+        form = GoalForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('deadline', form.errors)
+    
+    def test_deadline_today(self):
+        """Test that deadline today is valid."""
+        form_data = {
+            'title': 'Test Goal',
+            'description': 'Test Description',
+            'category': self.category.id,
+            'unit': self.unit.id,
+            'target_value': 100,
+            'deadline': date.today(),
+            'is_public': True
+        }
+        form = GoalForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+
+class ChartDataGroupingTest(TestCase):
+    """
+    Test the chart data grouping logic in services.
+    """
+    
+    def setUp(self):
+        """Set up test data."""
+        from .services import goal_get_chart_data
+        self.goal_get_chart_data = goal_get_chart_data
+        
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.category = Category.objects.create(cat="Test Category", slug="test")
+        self.unit = Unit.objects.create(name="km", order=1)
+        self.unit.categories.add(self.category)
+    
+    def test_daily_grouping_for_short_goals(self):
+        """Test that goals under 60 days use daily grouping."""
+        goal = Goal.objects.create(
+            user=self.user,
+            title="Short Goal",
+            description="Test",
+            category=self.category,
+            unit=self.unit,
+            target_value=100,
+            deadline=date.today() + timedelta(days=30)
+        )
+        
+        chart_data = self.goal_get_chart_data(goal)
+        self.assertEqual(chart_data['grouping'], 'daily')
+        # Should have around 30-31 data points (from created_at to deadline)
+        self.assertLessEqual(len(chart_data['dates']), 35)
+    
+    def test_weekly_grouping_for_medium_goals(self):
+        """Test that goals 60-365 days use weekly grouping."""
+        goal = Goal.objects.create(
+            user=self.user,
+            title="Medium Goal",
+            description="Test",
+            category=self.category,
+            unit=self.unit,
+            target_value=100,
+            deadline=date.today() + timedelta(days=180)  # 6 months
+        )
+        
+        chart_data = self.goal_get_chart_data(goal)
+        self.assertEqual(chart_data['grouping'], 'weekly')
+        # Should have around 26 weeks (180 days / 7)
+        self.assertLessEqual(len(chart_data['dates']), 30)
+    
+    def test_monthly_grouping_for_long_goals(self):
+        """Test that goals over 365 days use monthly grouping."""
+        goal = Goal.objects.create(
+            user=self.user,
+            title="Long Goal",
+            description="Test",
+            category=self.category,
+            unit=self.unit,
+            target_value=100,
+            deadline=date.today() + timedelta(days=700)  # Almost 2 years
+        )
+        
+        chart_data = self.goal_get_chart_data(goal)
+        self.assertEqual(chart_data['grouping'], 'monthly')
+        # Should have around 24 months
+        self.assertLessEqual(len(chart_data['dates']), 26)
+    
+    def test_chart_data_includes_required_fields(self):
+        """Test that chart data includes all required fields."""
+        goal = Goal.objects.create(
+            user=self.user,
+            title="Test Goal",
+            description="Test",
+            category=self.category,
+            unit=self.unit,
+            target_value=100,
+            deadline=date.today() + timedelta(days=30)
+        )
+        
+        chart_data = self.goal_get_chart_data(goal)
+        
+        # Check all required fields are present
+        self.assertIn('dates', chart_data)
+        self.assertIn('values', chart_data)
+        self.assertIn('cumulative', chart_data)
+        self.assertIn('grouping', chart_data)
+        self.assertIn('unit', chart_data)
+        self.assertIn('target', chart_data)
+        self.assertIn('avg_per_day', chart_data)
+        self.assertIn('needed_per_day', chart_data)
+    
+    def test_weekly_grouping_cumulative_calculation(self):
+        """Test that weekly grouping correctly sums progress."""
+        goal = Goal.objects.create(
+            user=self.user,
+            title="Medium Goal",
+            description="Test",
+            category=self.category,
+            unit=self.unit,
+            target_value=100,
+            deadline=date.today() + timedelta(days=180)
+        )
+        
+        # Add some progress entries
+        Progress.objects.create(user=self.user, goal=goal, value=10, date=date.today() - timedelta(days=14))
+        Progress.objects.create(user=self.user, goal=goal, value=5, date=date.today() - timedelta(days=10))
+        Progress.objects.create(user=self.user, goal=goal, value=8, date=date.today() - timedelta(days=3))
+        
+        chart_data = self.goal_get_chart_data(goal)
+        
+        # Check that cumulative values are present and non-null for past dates
+        non_null_cumulative = [x for x in chart_data['cumulative'] if x is not None]
+        self.assertGreater(len(non_null_cumulative), 0)
+        
+        # The last non-null cumulative value should equal total progress
+        self.assertEqual(max(non_null_cumulative), 23.0)
