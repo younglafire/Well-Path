@@ -20,18 +20,10 @@
                     <i data-lucide="users" class="me-1"></i>All Categories
                 </span>
                 {% for category in categories %}
-                
-                <a 
-                {% if user.is_authenticated %}
-                href="{% url 'category' category.slug %}" 
-                {% else %}
-                href="{% url 'login' %}?next={% url 'category' category.slug %}"
-                {% endif %}
-                class="btn btn-secondary-modern btn-sm">
+                <a href="{% url 'category' category.slug %}" class="btn btn-secondary-modern btn-sm">
                     <i data-lucide="folder" class="me-1"></i>{{ category.cat }}
                     <span class="badge bg-light text-dark ms-1">{{ category.active_goals_count }}</span>
                 </a>
-                
                 {% endfor %}
             </div>
         </div>
