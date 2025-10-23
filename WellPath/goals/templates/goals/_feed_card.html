@@ -37,7 +37,7 @@
         <div class="progress-section">
             <div class="progress-stats">
                 <div class="stat-item">
-                    <span class="stat-value">{{ goal.total_progress|floatformat:1 }}</span>
+                    <span class="stat-value">{{ goal.get_current_value|floatformat:1 }}</span>
                     <span class="stat-label">Current</span>
                 </div>
                 <div class="stat-item">
@@ -45,7 +45,7 @@
                     <span class="stat-label">Target</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value">{{ goal.progress_percent|floatformat:0 }}%</span>
+                    <span class="stat-value">{{ goal.progress_percentage|floatformat:0 }}%</span>
                     <span class="stat-label">Complete</span>
                 </div>
             </div>
@@ -53,10 +53,10 @@
             <div class="progress-bar-container">
                 <div class="modern-progress">
                     <div class="modern-progress-bar" 
-                         style="width: {% if goal.progress_percent > 0 %}{{ goal.progress_percent|floatformat:0 }}{% else %}2{% endif %}%;"></div>
+                         style="width: {% if goal.progress_percentage > 0 %}{{ goal.progress_percentage|floatformat:0 }}{% else %}2{% endif %}%;"></div>
                 </div>
                 <div class="progress-text">
-                    <span>{{ goal.total_progress|floatformat:1 }}/{{ goal.target_value }} {{ goal.unit.name }}</span>
+                    <span>{{ goal.get_current_value|floatformat:1 }}/{{ goal.target_value }} {{ goal.unit.name }}</span>
                 </div>
             </div>
         </div>

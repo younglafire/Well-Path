@@ -28,7 +28,7 @@
         <!-- Goal Stats -->
         <div class="goal-stats">
           <div class="goal-stat">
-            <span class="goal-stat-value">{{ goal.total_progress|floatformat:1 }}</span>
+            <span class="goal-stat-value">{{ goal.get_current_value|floatformat:1 }}</span>
             <span class="goal-stat-label">Current</span>
           </div>
           <div class="goal-stat">
@@ -40,12 +40,12 @@
         <!-- Progress Bar -->
         <div class="modern-progress">
           <div class="modern-progress-bar"
-               style="width: {% if goal.progress_percent > 0 %}{{ goal.progress_percent|floatformat:0 }}{% else %}2{% endif %}%;"></div>
+               style="width: {% if goal.progress_percentage > 0 %}{{ goal.progress_percentage|floatformat:0 }}{% else %}2{% endif %}%;"></div>
         </div>
         
         <div class="d-flex justify-content-between align-items-center text-sm">
-          <span class="fw-medium">{{ goal.progress_percent|floatformat:0 }}% Complete</span>
-          <span class="text-muted">{{ goal.total_progress|floatformat:1 }}/{{ goal.target_value }} {{ goal.unit.name }}</span>
+          <span class="fw-medium">{{ goal.progress_percentage|floatformat:0 }}% Complete</span>
+          <span class="text-muted">{{ goal.get_current_value|floatformat:1 }}/{{ goal.target_value }} {{ goal.unit.name }}</span>
         </div>
 
       {% if show_progress_form %}

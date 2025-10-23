@@ -279,7 +279,11 @@ def dashboard_get_category_stats(user: User) -> Dict[int, Dict]:
 def goal_get_chart_data(goal: Goal) -> Dict:
     """
     Generate chart data for goal detail page.
-    Includes date range, values, cumulative progress, and averages.
+    Intelligently groups data by days/weeks/months based on timespan.
+    
+    - Less than 60 days: Show daily data
+    - 60-365 days: Group by weeks
+    - More than 365 days: Group by months
     
     This is for a SINGLE goal, so it's OK to use get_current_value().
     """
@@ -292,34 +296,25 @@ def goal_get_chart_data(goal: Goal) -> Dict:
         start_date = goal.created_at.date()
     
     end_date = goal.deadline or now().date()
+    today = now().date()
     
-    # Build full date range
-    all_dates = []
-    current = start_date
-    while current <= end_date:
-        all_dates.append(current)
-        current += timedelta(days=1)
+    # Calculate timespan to determine grouping strategy
+    total_days = (end_date - start_date).days + 1
     
     # Map progress by date
     progress_map = {p.date: p.value for p in progress_history}
     
-    # Build aligned lists
-    cumulative = []
-    values = []
-    running_total = 0.0
-    today = now().date()
+    if total_days <= 60:
+        # Daily view for short goals
+        chart_data = _generate_daily_chart_data(start_date, end_date, today, progress_map, goal)
+    elif total_days <= 365:
+        # Weekly view for medium-term goals
+        chart_data = _generate_weekly_chart_data(start_date, end_date, today, progress_map, goal)
+    else:
+        # Monthly view for long-term goals
+        chart_data = _generate_monthly_chart_data(start_date, end_date, today, progress_map, goal)
     
-    for d in all_dates:
-        if d <= today:
-            v = float(progress_map.get(d, 0))
-            values.append(v)
-            running_total += v
-            cumulative.append(running_total)
-        else:
-            values.append(None)
-            cumulative.append(None)
-    
-    # Calculate averages (using get_current_value is OK here - single goal)
+    # Calculate averages
     last_date = min(today, end_date)
     days_passed = (last_date - start_date).days + 1 if last_date >= start_date else 1
     
@@ -339,12 +334,144 @@ def goal_get_chart_data(goal: Goal) -> Dict:
     elif goal.target_value > total_progress:
         needed_per_day = goal.target_value - total_progress
     
-    return {
-        "dates": [d.strftime("%Y-%m-%d") for d in all_dates],
-        "values": values,
-        "cumulative": cumulative,
+    chart_data.update({
         "unit": goal.unit.name if goal.unit else "",
         "target": float(goal.target_value) if goal.target_value is not None else None,
         "avg_per_day": avg_per_day,
         "needed_per_day": needed_per_day,
+    })
+    
+    return chart_data
+
+
+def _generate_daily_chart_data(start_date: date, end_date: date, today: date, 
+                                progress_map: Dict[date, float], goal: Goal) -> Dict:
+    """Generate daily chart data for goals under 60 days."""
+    all_dates = []
+    current = start_date
+    while current <= end_date:
+        all_dates.append(current)
+        current += timedelta(days=1)
+    
+    cumulative = []
+    values = []
+    running_total = 0.0
+    
+    for d in all_dates:
+        if d <= today:
+            v = float(progress_map.get(d, 0))
+            values.append(v)
+            running_total += v
+            cumulative.append(running_total)
+        else:
+            values.append(None)
+            cumulative.append(None)
+    
+    return {
+        "dates": [d.strftime("%Y-%m-%d") for d in all_dates],
+        "values": values,
+        "cumulative": cumulative,
+        "grouping": "daily"
+    }
+
+
+def _generate_weekly_chart_data(start_date: date, end_date: date, today: date,
+                                 progress_map: Dict[date, float], goal: Goal) -> Dict:
+    """Generate weekly chart data for goals 60-365 days."""
+    # Find Monday of the week containing start_date
+    week_start = start_date - timedelta(days=start_date.weekday())
+    
+    weeks = []
+    labels = []
+    cumulative = []
+    values = []
+    running_total = 0.0
+    
+    current_week_start = week_start
+    while current_week_start <= end_date:
+        current_week_end = min(current_week_start + timedelta(days=6), end_date)
+        
+        # Check if this week has any data (is in the past)
+        if current_week_end <= today:
+            # Sum up all progress in this week
+            week_progress = 0.0
+            day = max(current_week_start, start_date)
+            while day <= min(current_week_end, today):
+                week_progress += progress_map.get(day, 0)
+                day += timedelta(days=1)
+            
+            values.append(week_progress)
+            running_total += week_progress
+            cumulative.append(running_total)
+        else:
+            values.append(None)
+            cumulative.append(None)
+        
+        # Label format: "Week of Jan 1"
+        label = f"{current_week_start.strftime('%b %d')}"
+        labels.append(label)
+        
+        current_week_start += timedelta(days=7)
+    
+    return {
+        "dates": labels,
+        "values": values,
+        "cumulative": cumulative,
+        "grouping": "weekly"
+    }
+
+
+def _generate_monthly_chart_data(start_date: date, end_date: date, today: date,
+                                  progress_map: Dict[date, float], goal: Goal) -> Dict:
+    """Generate monthly chart data for goals over 365 days."""
+    # Start from the first day of the month containing start_date
+    month_start = date(start_date.year, start_date.month, 1)
+    
+    months = []
+    labels = []
+    cumulative = []
+    values = []
+    running_total = 0.0
+    
+    current_month = month_start
+    while current_month <= end_date:
+        # Calculate last day of this month
+        if current_month.month == 12:
+            next_month = date(current_month.year + 1, 1, 1)
+        else:
+            next_month = date(current_month.year, current_month.month + 1, 1)
+        month_end = next_month - timedelta(days=1)
+        month_end = min(month_end, end_date)
+        
+        # Check if this month has any data (is in the past)
+        if month_end <= today:
+            # Sum up all progress in this month
+            month_progress = 0.0
+            day = max(current_month, start_date)
+            while day <= min(month_end, today):
+                month_progress += progress_map.get(day, 0)
+                day += timedelta(days=1)
+            
+            values.append(month_progress)
+            running_total += month_progress
+            cumulative.append(running_total)
+        else:
+            values.append(None)
+            cumulative.append(None)
+        
+        # Label format: "Jan 2024"
+        label = current_month.strftime("%b %Y")
+        labels.append(label)
+        
+        # Move to next month
+        if current_month.month == 12:
+            current_month = date(current_month.year + 1, 1, 1)
+        else:
+            current_month = date(current_month.year, current_month.month + 1, 1)
+    
+    return {
+        "dates": labels,
+        "values": values,
+        "cumulative": cumulative,
+        "grouping": "monthly"
     }

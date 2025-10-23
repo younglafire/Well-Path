@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from datetime import date
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from .models import Goal
 from taxonomy.models import Category, Unit
 
@@ -88,6 +89,7 @@ class GoalForm(forms.ModelForm):
             "type": "date",
             "class": "form-control modern-form-control",
             "min": date.today().strftime("%Y-%m-%d"),
+            "max": (date.today() + timedelta(days=730)).strftime("%Y-%m-%d"),
         })
     )
     is_public = forms.BooleanField(
@@ -118,6 +120,20 @@ class GoalForm(forms.ModelForm):
                 pass
         elif self.instance.pk and self.instance.category:
             self.fields["unit"].queryset = self.instance.category.units.all()
+
+    def clean_deadline(self):
+        """Validate that deadline is not too far in the future (max 2 years)."""
+        deadline = self.cleaned_data.get('deadline')
+        if deadline:
+            max_deadline = date.today() + timedelta(days=730)  # 2 years
+            if deadline > max_deadline:
+                raise ValidationError(
+                    f"Deadline cannot be more than 2 years from today. "
+                    f"Maximum deadline: {max_deadline.strftime('%Y-%m-%d')}"
+                )
+            if deadline < date.today():
+                raise ValidationError("Deadline cannot be in the past.")
+        return deadline
 
 
 class GoalEditForm(GoalForm):

@@ -58,6 +58,7 @@
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
+    <li><a href="#testing">Testing</a></li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
@@ -93,7 +94,35 @@ Here's a blank template to get started. To avoid retyping too much info, do a se
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+### Key Features
 
+✅ **Complete CRUD Operations**
+- Create, read, update, and delete personal goals
+- Full control over your goal management
+
+🎯 **Progress Tracking**
+- Optional progress monitoring for each goal
+- Visual feedback on your achievements
+
+🔍 **Smart Organization**
+- Sort and filter goals for easy navigation
+- Find exactly what you need, when you need it
+
+📄 **Detailed Goal Pages**
+- Clean, intuitive layout for each goal
+- All information at a glance
+
+🌐 **Social Features**
+- Public goals feed to share your journey
+- Like system only
+- Connect with others pursuing similar goals
+
+🚀 **Production-Ready**
+- Thoroughly tested and polished
+- Deployment-ready architecture
+- Scalable database design
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -132,6 +161,95 @@ This is an example of how to list things you need to use the software and how to
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+<!-- TESTING -->
+## Testing
+
+Well Path includes a comprehensive test suite to ensure code quality and reliability. Tests cover models, views, services, and forms across all applications.
+
+### Running Tests
+
+**Run all tests:**
+```sh
+# Navigate to the WellPath subdirectory (where manage.py is located)
+cd WellPath
+python manage.py test
+```
+
+**Run tests for a specific app:**
+```sh
+python manage.py test goals      # Test the goals app
+python manage.py test social     # Test the social app
+python manage.py test taxonomy   # Test the taxonomy app
+```
+
+**Run tests with verbose output:**
+```sh
+python manage.py test --verbosity=2
+```
+
+**Run a specific test class or method:**
+```sh
+python manage.py test goals.tests.GoalModelTest
+python manage.py test goals.tests.GoalModelTest.test_goal_creation
+```
+
+### Test Coverage
+
+The project includes **66 comprehensive tests** covering:
+
+📋 **Goals App (40 tests)**
+- User model and authentication
+- Goal model with status calculations
+- Progress tracking with daily constraints
+- Progress photos with file uploads
+- Business logic in service layer
+- User registration and goal forms
+
+👥 **Social App (11 tests)**
+- Like model with unique constraints
+- Like/unlike toggle functionality
+- AJAX endpoints for social features
+
+🏷️ **Taxonomy App (15 tests)**
+- Category model with slug generation
+- Unit model and ordering
+- Category filtering views
+- AJAX unit loading endpoint
+
+### Understanding the Tests
+
+Each test file includes detailed comments explaining:
+- **What** is being tested
+- **Why** it's important
+- **How** the test works
+
+This makes the tests a great learning resource for understanding Django development patterns!
+
+### Example Test Structure
+
+```python
+def test_goal_creation(self):
+    """
+    Test that a goal is created successfully with all fields.
+    
+    This checks:
+    - The goal exists in the database
+    - All fields are stored correctly
+    """
+    self.assertEqual(self.goal.title, "Run 100km")
+    self.assertTrue(self.goal.is_public)
+```
+
+### Writing New Tests
+
+When adding new features:
+1. Write tests first (Test-Driven Development)
+2. Run tests to see them fail
+3. Implement the feature
+4. Run tests to see them pass
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 
 
 <!-- USAGE EXAMPLES -->
@@ -148,10 +266,27 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Feature 1
-- [ ] Feature 2
-- [ ] Feature 3
-    - [ ] Nested Feature
+### Completed Features ✅
+- [x] User authentication and authorization
+- [x] Complete CRUD operations for goals
+- [x] Progress tracking system
+- [x] Goal sorting and filtering
+- [x] Detailed goal pages
+- [x] Public goals feed
+- [x] Responsive design
+- [x] Database models and relationships
+
+### Future Enhancements 🚀
+- [ ] Goal categories and tags
+- [ ] Comment system
+- [ ] Achievement badges and milestones
+- [ ] User profiles with statistics
+- [ ] Follow/friend system
+- [ ] Notification system
+- [ ] Mobile app (React Native)
+- [ ] API for third-party integrations
+- [ ] Goal templates and recommendations
+- [ ] Export progress reports
 
 See the [open issues](https://github.com/github_username/repo_name/issues) for a full list of proposed features (and known issues).
 
