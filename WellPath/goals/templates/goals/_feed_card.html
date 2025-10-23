@@ -12,7 +12,8 @@
             </div>
         </div>
         {% if goal.category %}
-        <a href="{% url 'category' goal.category.slug %}" class="text-muted text-decoration-none">
+        <a 
+        href="{% if user.is_authenticated %}{% url 'category' goal.category.slug %}{% else %}{% url 'login' %}?next={% url 'category' goal.category.slug %}{% endif %}" class="text-muted text-decoration-none">
         <div class="post-status">
             <div class="meta-item">
                 <i data-lucide="folder" class="me-1"></i>
