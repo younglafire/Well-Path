@@ -155,7 +155,10 @@ p {
   background-color: var(--primary-100);
 }
 .nav-link .btn-primary-modern {
-  color: white !important; /* Ensure the icon color is white */
+    background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+    color: white !important; /* Ensure all text inside is white */
+    box-shadow: var(--shadow-sm);
+    text-decoration: none;
 }
 
 /* ===== BUTTONS ===== */
