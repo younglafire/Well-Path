@@ -390,27 +390,28 @@ def _generate_weekly_chart_data(start_date: date, end_date: date, today: date,
     current_week_start = week_start
     while current_week_start <= end_date:
         current_week_end = min(current_week_start + timedelta(days=6), end_date)
-        
-        # Check if this week has any data (is in the past)
-        if current_week_end <= today:
+
+        # Include weeks that have started (allow partial current week)
+        if current_week_start <= today:
             # Sum up all progress in this week
             week_progress = 0.0
             day = max(current_week_start, start_date)
-            while day <= min(current_week_end, today):
+            last_day = min(current_week_end, today)
+            while day <= last_day:
                 week_progress += progress_map.get(day, 0)
                 day += timedelta(days=1)
-            
+
             values.append(week_progress)
             running_total += week_progress
             cumulative.append(running_total)
         else:
             values.append(None)
             cumulative.append(None)
-        
+
         # Label format: "Week of Jan 1"
         label = f"{current_week_start.strftime('%b %d')}"
         labels.append(label)
-        
+
         current_week_start += timedelta(days=7)
     
     return {
@@ -442,27 +443,28 @@ def _generate_monthly_chart_data(start_date: date, end_date: date, today: date,
             next_month = date(current_month.year, current_month.month + 1, 1)
         month_end = next_month - timedelta(days=1)
         month_end = min(month_end, end_date)
-        
-        # Check if this month has any data (is in the past)
-        if month_end <= today:
+
+        # Include months that have started (allow partial current month)
+        if current_month <= today:
             # Sum up all progress in this month
             month_progress = 0.0
             day = max(current_month, start_date)
-            while day <= min(month_end, today):
+            last_day = min(month_end, today)
+            while day <= last_day:
                 month_progress += progress_map.get(day, 0)
                 day += timedelta(days=1)
-            
+
             values.append(month_progress)
             running_total += month_progress
             cumulative.append(running_total)
         else:
             values.append(None)
             cumulative.append(None)
-        
+
         # Label format: "Jan 2024"
         label = current_month.strftime("%b %Y")
         labels.append(label)
-        
+
         # Move to next month
         if current_month.month == 12:
             current_month = date(current_month.year + 1, 1, 1)
