@@ -1,5 +1,4 @@
-
-echo "*.pyc
+*.pyc
 __pycache__/
 *.pyo
 *.pyd
@@ -10,9 +9,4 @@ venv/
 .DS_Store
 *.sqlite3
 media/
-staticfiles/" > .gitignore
-
-# Clean up repository
-git rm --cached *.pyc
-git rm -r --cached __pycache__/
-git commit -m "Clean up unnecessary files from repository"
+staticfiles/
