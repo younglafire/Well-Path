@@ -9,9 +9,10 @@
             </div>
             <span class="fw-medium text-muted">{{ goal.user.username }}</span>
           </div>
-          <span class="status-badge status-{% if goal.progress_percent >= 100 %}completed{% elif goal.days_remaining <= 0 %}overdue{% else %}active{% endif %}">
-            {% if goal.progress_percent >= 100 %}Completed{% elif goal.days_remaining <= 0 %}Overdue{% else %}Active{% endif %}
+         <span class="status-badge status-{{ goal.status }}">
+    {{ goal.status|capfirst }}
           </span>
+
         </div>
         <div class="goal-title">
           <a href="{% if user.is_authenticated %}
@@ -65,7 +66,7 @@
           <div class="d-flex align-items-center justify-content-center p-3 bg-success-50 rounded">
             <i data-lucide="check-circle" class="me-2" style="color: var(--success-600);"></i>
             <span class="text-success-600 fw-medium">
-              {{ goal.today_progress.value|default:0|floatformat:1 }} {{ goal.unit.name }} completed today!
+              {{ goal.today_progress.value}} completed today!
             </span>
           </div>
           {% endif %}

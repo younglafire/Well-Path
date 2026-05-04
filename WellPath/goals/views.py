@@ -168,10 +168,17 @@ def delete_goal(request, goal_id):
 
 @login_required
 def add_progress(request):
-    """Add or update progress for a goal."""
+    """Add or update progress for a goal."""   
     if request.method == "POST":
         goal_id = request.POST.get("goal_id")
-        value = float(request.POST.get("progress"))
+        try:
+            value = float(request.POST.get("progress"))
+            if value < 0:
+                raise ValueError("Negative value")
+        except (ValueError, TypeError):
+            messages.error(request, "Invaid pregress value.")
+            return redirect("goal_detail", goal_id=goal_id)
+            
         goal = Goal.objects.get(id=goal_id)
         
         # Get uploaded images
@@ -266,12 +273,14 @@ def goals_api(request):
     """API endpoint to filter goals by status (for dynamic UI)."""
     filter_type = request.GET.get("status", "active")
     
-    # Use service to get filtered goals
     filtered_goals = services.goal_list_for_user(
-        user=request.user,
-        status_filter=filter_type
-    )
-    
+    user=request.user,
+    status_filter=filter_type
+)    # Attach today_progress to each goal so the template can use it
+    for goal in filtered_goals:
+        goal.today_progress = goal.has_today_progress(request.user)
+        
+  
     html = render_to_string("goals/_goal_card.html", {
         "goals": filtered_goals,
         "show_progress_form": True
