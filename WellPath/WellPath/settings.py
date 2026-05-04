@@ -12,7 +12,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
-
+from dotenv import load_dotenv
+# Load enviroment variables for .env files
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -38,6 +40,8 @@ INSTALLED_APPS = [
     'social',
     'taxonomy',
     'django_extensions',
+    'rest_framework',
+    'api', 
 ]
 
 MIDDLEWARE = [
@@ -75,12 +79,21 @@ WSGI_APPLICATION = 'WellPath.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Source - https://stackoverflow.com/a/50323012
+# Posted by R.yan, modified by community. See post 'Timeline' for change history
+# Retrieved 2026-05-04, License - CC BY-SA 4.0
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get('POSTGRES_DB', 'wellpath_db'),
+        'USER': os.environ.get('POSTGRES_USER', 'wellpath_user'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'wellpath_password'),
+        'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
 }
+
 
 
 # Password validation

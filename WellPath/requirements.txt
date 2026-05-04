@@ -1,5 +1,14 @@
 Django
 Pillow
 # Django REST framework
-djangorestframework
+
 django-extensions
+djangorestframework
+djangorestframework-simplejwt
+drf-spectacular
+
+#config database
+psycopg2
+
+
+dotenv
