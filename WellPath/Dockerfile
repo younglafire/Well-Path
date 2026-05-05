@@ -48,4 +48,4 @@ USER appuser
 EXPOSE 8000
 
 # start the application using Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "WellPath.wsgi:application"]
+CMD sh -c "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:8000 --workers 3 WellPath.wsgi:application"

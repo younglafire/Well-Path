@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+        POSTGRES_DB: ${POSTGRES_DB}
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    
+  django-web:
+      build: .
+      container_name: wellpath-docker
+      ports:
+      - "8000:8000"
+      depends_on:
+      - db
+      environment:
+        SECRET_KEY: ${DJANGO_SECRET_KEY}
+        DEBUG: ${DEBUG}
+        LOG_LEVEL: ${LOG_LEVEL}
+        ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+        DATABASE_ENGINE: ${DATABASE_ENGINE}
+        DATABASE_NAME: ${POSTGRES_DB}
+        DATABASE_USERNAME: ${POSTGRES_USER}
+        
+        DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+        DATABASE_HOST: ${POSTGRES_HOST}
+        DATABASE_PORT: ${POSTGRES_PORT}
+
+      env_file:
+        - .env
+volumes:
+  postgres_data:
+  
+
