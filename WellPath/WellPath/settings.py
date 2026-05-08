@@ -153,6 +153,32 @@ GRAPH_MODELS = {
 # Logging Configuration
 LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
 
+# Determine if we should use file logging (not in CI)
+USE_FILE_LOGGING = not os.environ.get('CI', False)
+
+# Build handlers dict
+_handlers = {
+    'console': {
+        'level': LOG_LEVEL,
+        'class': 'logging.StreamHandler',
+        'formatter': 'simple',
+    },
+}
+
+# Only add file handler if not in CI and logs directory exists
+if USE_FILE_LOGGING:
+    logs_dir = BASE_DIR / 'logs'
+    logs_dir.mkdir(exist_ok=True)
+    _handlers['file'] = {
+        'level': LOG_LEVEL,
+        'class': 'logging.FileHandler',
+        'filename': logs_dir / 'django.log',
+        'formatter': 'verbose',
+    }
+
+# Determine which handlers to use for loggers
+_log_handlers = ['console', 'file'] if USE_FILE_LOGGING else ['console']
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -174,42 +200,30 @@ LOGGING = {
             '()': 'django.utils.log.RequireDebugTrue',
         },
     },
-    'handlers': {
-        'console': {
-            'level': LOG_LEVEL,
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-        },
-        'file': {
-            'level': LOG_LEVEL,
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
-            'formatter': 'verbose',
-        },
-    },
+    'handlers': _handlers,
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': _log_handlers,
             'level': LOG_LEVEL,
             'propagate': False,
         },
         'goals': {
-            'handlers': ['console', 'file'],
+            'handlers': _log_handlers,
             'level': LOG_LEVEL,
             'propagate': False,
         },
         'social': {
-            'handlers': ['console', 'file'],
+            'handlers': _log_handlers,
             'level': LOG_LEVEL,
             'propagate': False,
         },
         'taxonomy': {
-            'handlers': ['console', 'file'],
+            'handlers': _log_handlers,
             'level': LOG_LEVEL,
             'propagate': False,
         },
         'api': {
-            'handlers': ['console', 'file'],
+            'handlers': _log_handlers,
             'level': LOG_LEVEL,
             'propagate': False,
         },
