@@ -1,5 +1,5 @@
 # Core Django
-Django==6.0.4
+Django==6.0.3
 asgiref==3.11.1
 sqlparse==0.5.5
 
