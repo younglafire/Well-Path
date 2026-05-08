@@ -91,8 +91,9 @@ WSGI_APPLICATION = 'WellPath.wsgi.application'
 if os.environ.get('DATABASE_URL'):
     # Render provides DATABASE_URL
     DATABASES = {
-        'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'), conn_max_age=600, conn_health_checks=True)
+        'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'), conn_max_age=600)
     }
+    DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 else:
     # Local development with individual env vars
     DATABASES = {
