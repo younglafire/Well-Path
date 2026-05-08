@@ -1,22 +1,26 @@
 databases:
-  - name: mysitedb
+  - name: wellpathdb
     plan: free
-    databaseName: mysite
-    user: mysite
+    databaseName: wellpath_db
+    user: wellpath_user
 
 services:
   - type: web
     plan: free
-    name: mysite
+    name: wellpath
     runtime: python
     buildCommand: './build.sh'
-    startCommand: 'python -m gunicorn mysite.asgi:application -k uvicorn.workers.UvicornWorker'
+    startCommand: 'cd WellPath && python -m gunicorn WellPath.asgi:application -k uvicorn.workers.UvicornWorker'
     envVars:
       - key: DATABASE_URL
         fromDatabase:
-          name: mysitedb
+          name: wellpathdb
           property: connectionString
-      - key: SECRET_KEY
+      - key: DJANGO_SECRET_KEY
         generateValue: true
+      - key: DEBUG
+        value: "false"
+      - key: ALLOWED_HOSTS
+        value: your-render-domain.onrender.com
       - key: WEB_CONCURRENCY
         value: 4
