@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import dj_database_url 
+
 # Load enviroment variables for .env files
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -84,16 +86,25 @@ WSGI_APPLICATION = 'WellPath.wsgi.application'
 # Posted by R.yan, modified by community. See post 'Timeline' for change history
 # Retrieved 2026-05-04, License - CC BY-SA 4.0
 
-DATABASES = {
-    'default': {
-        'ENGINE': os.environ.get('DATABASE_ENGINE', 'django.db.backends.postgresql_psycopg2'),
-        'NAME': os.environ.get('POSTGRES_DB', 'wellpath_db'),
-        'USER': os.environ.get('POSTGRES_USER', 'wellpath_user'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'wellpath_password'),
-        'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
-        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+# Database - Use dj_database_url for Render and production
+# Falls back to local Postgres for development
+if os.environ.get('DATABASE_URL'):
+    # Render provides DATABASE_URL
+    DATABASES = {
+        'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'), conn_max_age=600, conn_health_checks=True)
     }
-}
+else:
+    # Local development with individual env vars
+    DATABASES = {
+        'default': {
+            'ENGINE': os.environ.get('DATABASE_ENGINE', 'django.db.backends.postgresql_psycopg2'),
+            'NAME': os.environ.get('POSTGRES_DB', 'wellpath_db'),
+            'USER': os.environ.get('POSTGRES_USER', 'wellpath_user'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'wellpath_password'),
+            'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
+            'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        }
+    }
 
 
 
@@ -128,11 +139,13 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+if not DEBUG:
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
