@@ -22,7 +22,6 @@ jsonschema-specifications==2025.9.1
 MarkupSafe==3.0.3
 packaging==26.0
 pillow==12.2.0
-psycopg2==2.9.12
 psycopg2-binary==2.9.12
 py==1.11.0
 pydantic==2.12.5
